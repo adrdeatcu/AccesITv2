@@ -1,0 +1,30 @@
+<div class="login-container">
+    <h2>Autentificare</h2>
+  
+    <form (ngSubmit)="login()" #loginForm="ngForm">
+      <label for="email">Email</label>
+      <input
+        id="email"
+        type="email"
+        name="email"
+        [(ngModel)]="email"
+        required
+        placeholder="Introdu emailul"
+      />
+  
+      <label for="password">Parolă</label>
+      <input
+        id="password"
+        type="password"
+        name="password"
+        [(ngModel)]="password"
+        required
+        placeholder="Introdu parola"
+      />
+  
+      <button type="submit" [disabled]="!loginForm.valid">Autentificare</button>
+  
+      <p *ngIf="loginError" class="error-message">{{ loginError }}</p>
+    </form>
+  </div>
+  
