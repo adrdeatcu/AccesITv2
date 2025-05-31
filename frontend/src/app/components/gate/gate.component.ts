@@ -41,16 +41,21 @@ export class GateComponent implements OnInit {
   }
 
   openGate() {
+    if (this.gateStatus !== 'închis') return;
+    
     this.gateStatus = 'în curs de deschidere';
+    
     setTimeout(() => {
       this.gateStatus = 'deschis';
+      
       setTimeout(() => {
         this.gateStatus = 'în curs de închidere';
+        
         setTimeout(() => {
           this.gateStatus = 'închis';
-        }, 2000);
-      }, 3000);
-    }, 2000);
+        }, 2000); // Time for closing animation
+      }, 3000); // Time gate stays open
+    }, 2000); // Time for opening animation
   }
 
   async loadPendingLogs() {

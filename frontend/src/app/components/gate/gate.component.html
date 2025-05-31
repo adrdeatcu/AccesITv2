@@ -1,20 +1,48 @@
 <div class="gate-container">
-  <!-- Left panel: Clock + Status -->
   <div class="status-panel">
     <h1 class="clock">{{ currentTime }}</h1>
-    <div class="status-badge" [ngClass]="gateStatusClass">
-      {{ gateStatus | titlecase }}
+    
+    <!-- Add gate animation container -->
+    <div class="gate-animation-container">
+      <div class="gate" [ngClass]="{
+        'gate-closed': gateStatus === 'închis',
+        'gate-opening': gateStatus === 'în curs de deschidere',
+        'gate-open': gateStatus === 'deschis',
+        'gate-closing': gateStatus === 'în curs de închidere'
+      }">
+        <div class="gate-post"></div>
+        <div class="gate-barrier"></div>
+      </div>
+      <div class="gate-status-text">
+        {{ gateStatus | titlecase }}
+      </div>
     </div>
-    <button class="open-btn" (click)="openGate()">Deschide Poarta</button>
+
+    <button class="open-btn" (click)="openGate()" [disabled]="gateStatus !== 'închis'">
+      <i class="fas fa-door-open"></i> Deschide Poarta
+    </button>
   </div>
 
-  <!-- Right panel: Access Requests -->
   <div class="requests-panel">
-    <h2>Cereri de Acces</h2>
+    <h2>
+      <i class="fas fa-clipboard-list"></i>
+      Cereri de Acces
+    </h2>
 
-    <div *ngIf="loading" class="loading">Se încarcă...</div>
-    <div *ngIf="error" class="error">{{ error }}</div>
-    <div *ngIf="!loading && pendingLogs.length === 0" class="empty">Nu există cereri în așteptare</div>
+    <div *ngIf="loading" class="loading">
+      <i class="fas fa-circle-notch fa-spin"></i>
+      Se încarcă...
+    </div>
+    
+    <div *ngIf="error" class="error">
+      <i class="fas fa-exclamation-triangle"></i>
+      {{ error }}
+    </div>
+    
+    <div *ngIf="!loading && pendingLogs.length === 0" class="empty">
+      <i class="fas fa-check-circle"></i>
+      Nu există cereri în așteptare
+    </div>
 
     <div *ngFor="let log of pendingLogs" class="request-card">
       <p><strong>Nume:</strong> {{ log.name }}</p>
@@ -23,8 +51,12 @@
       <p><strong>Vizitator:</strong> {{ log.is_visitor ? 'Da' : 'Nu' }}</p>
       <p><strong>Data/Ora:</strong> {{ log.timestamp | date: 'short' }}</p>
       <div class="actions">
-        <button class="approve" (click)="handleApproval(log.id, true)">✔ Acceptă</button>
-        <button class="deny" (click)="handleApproval(log.id, false)">✖ Refuză</button>
+        <button class="approve" (click)="handleApproval(log.id, true)">
+          <i class="fas fa-check"></i> Acceptă
+        </button>
+        <button class="deny" (click)="handleApproval(log.id, false)">
+          <i class="fas fa-times"></i> Refuză
+        </button>
       </div>
     </div>
   </div>
