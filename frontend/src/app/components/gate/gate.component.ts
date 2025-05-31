@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { SupabaseService } from '../../services/supabase.service';
 
 @Component({
   selector: 'app-gate',
   standalone: true,
-  imports: [CommonModule], // Needed for *ngIf, *ngFor, ngClass
   templateUrl: './gate.component.html',
-  styleUrls: ['./gate.component.css']
+  styleUrls: ['./gate.component.css'],
+  imports: [CommonModule] // ⬅️ THIS is the important part
 })
 export class GateComponent implements OnInit {
   currentTime: string = '';
@@ -16,22 +16,28 @@ export class GateComponent implements OnInit {
   loading = false;
   error: string = '';
 
-  constructor(
-    private supabaseService: SupabaseService
-  ) {}
+  constructor(private supabaseService: SupabaseService) {}
 
   ngOnInit(): void {
     this.updateTime();
     setInterval(() => this.updateTime(), 1000);
-  
-    this.loadPendingLogs(); // initial load
-    setInterval(() => this.loadPendingLogs(), 7000); // re-check every 7 seconds
+    this.loadPendingLogs();
+    setInterval(() => this.loadPendingLogs(), 10000);
   }
-  
 
   updateTime() {
     const now = new Date();
     this.currentTime = now.toLocaleTimeString('ro-RO', { hour12: false });
+  }
+
+  get gateStatusClass() {
+    switch (this.gateStatus) {
+      case 'deschis': return 'deschis';
+      case 'închis': return 'inchis';
+      case 'în curs de deschidere': return 'in-curs-deschidere';
+      case 'în curs de închidere': return 'in-curs-inchidere';
+      default: return '';
+    }
   }
 
   openGate() {
@@ -62,7 +68,7 @@ export class GateComponent implements OnInit {
   async handleApproval(id: number, approved: boolean) {
     const success = await this.supabaseService.updateAccessApproval(id, approved);
     if (success) {
-      this.loadPendingLogs(); // Refresh the list
+      this.loadPendingLogs();
     } else {
       alert('Failed to update access status.');
     }

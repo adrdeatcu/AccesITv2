@@ -1,46 +1,31 @@
-<div class="container">
-  <h2 class="title">Status Poartă</h2>
-
-  <!-- Current Time -->
-  <div class="info-box">
-    <strong>Ora Curentă:</strong> {{ currentTime }}
+<div class="gate-container">
+  <!-- Left panel: Clock + Status -->
+  <div class="status-panel">
+    <h1 class="clock">{{ currentTime }}</h1>
+    <div class="status-badge" [ngClass]="gateStatusClass">
+      {{ gateStatus | titlecase }}
+    </div>
+    <button class="open-btn" (click)="openGate()">Deschide Poarta</button>
   </div>
 
-  <!-- Gate Status -->
-  <div class="info-box">
-    <strong>Stare Poartă:</strong>
-    <span [ngClass]="{
-      'status-closed': gateStatus === 'închis',
-      'status-open': gateStatus === 'deschis',
-      'status-opening': gateStatus === 'în curs de deschidere',
-      'status-closing': gateStatus === 'în curs de închidere'
-    }">{{ gateStatus }}</span>
-  </div>
+  <!-- Right panel: Access Requests -->
+  <div class="requests-panel">
+    <h2>Cereri de Acces</h2>
 
-  <!-- Open Gate Button -->
-  <button (click)="openGate()">Deschide Poarta</button>
+    <div *ngIf="loading" class="loading">Se încarcă...</div>
+    <div *ngIf="error" class="error">{{ error }}</div>
+    <div *ngIf="!loading && pendingLogs.length === 0" class="empty">Nu există cereri în așteptare</div>
 
-  <hr />
-
-  <h3>Cereri de Acces în Afara Orarului</h3>
-
-  <!-- Loading -->
-  <div *ngIf="loading">Se încarcă...</div>
-
-  <!-- Error -->
-  <div *ngIf="error" class="error">{{ error }}</div>
-
-  <!-- Pending Logs -->
-  <div *ngIf="!loading && pendingLogs.length === 0">
-    Nu există cereri de aprobare momentan.
-  </div>
-
-  <div *ngFor="let log of pendingLogs" class="request-card">
-    <p><strong>Nume:</strong> {{ log.employee_name || 'Necunoscut' }}</p>
-    <p><strong>Direcție:</strong> {{ log.direction }}</p>
-    <p><strong>Plăcuță mașină:</strong> {{ log.car_plate || '—' }}</p>
-    <p><strong>Data/Ora:</strong> {{ log.timestamp | date: 'short' }}</p>
-    <button (click)="handleApproval(log.id, true)">✅ Aprobă</button>
-    <button (click)="handleApproval(log.id, false)">❌ Respinge</button>
+    <div *ngFor="let log of pendingLogs" class="request-card">
+      <p><strong>Nume:</strong> {{ log.name }}</p>
+      <p><strong>Cod Bluetooth:</strong> {{ log.bluetooth_code }}</p>
+      <p><strong>Direcție:</strong> {{ log.direction }}</p>
+      <p><strong>Vizitator:</strong> {{ log.is_visitor ? 'Da' : 'Nu' }}</p>
+      <p><strong>Data/Ora:</strong> {{ log.timestamp | date: 'short' }}</p>
+      <div class="actions">
+        <button class="approve" (click)="handleApproval(log.id, true)">✔ Acceptă</button>
+        <button class="deny" (click)="handleApproval(log.id, false)">✖ Refuză</button>
+      </div>
+    </div>
   </div>
 </div>

@@ -1,30 +1,124 @@
-.container {
-    padding: 20px;
-    max-width: 600px;
-    margin: auto;
+.gate-container {
+    display: flex;
+    gap: 2rem;
+    padding: 2rem;
+    font-family: Arial, sans-serif;
+    justify-content: space-between;
+    flex-wrap: wrap;
   }
-  .title {
+  
+  .status-panel {
+    flex: 1;
+    min-width: 300px;
+    max-width: 400px;
+    background: #f4f4f4;
+    padding: 2rem;
+    border-radius: 10px;
     text-align: center;
-    margin-bottom: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   }
-  .info-box {
-    margin-bottom: 10px;
+  
+  .clock {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    font-family: 'Courier New', monospace;
   }
-  .status-closed { color: red; font-weight: bold; }
-  .status-open { color: green; font-weight: bold; }
-  .status-opening, .status-closing { color: orange; font-weight: bold; }
-  .request-card {
-    border: 1px solid #ccc;
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 5px;
-  }
-  .error {
-    color: red;
+  
+  .status-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
     font-weight: bold;
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
   }
-  button {
-    margin-right: 10px;
-    margin-top: 5px;
+  
+  .status-badge.închis {
+    background-color: #ccc;
+    color: #444;
+  }
+  
+  .status-badge.deschis {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+    .status-badge.in-curs-deschidere,
+    .status-badge.in-curs-inchidere {
+        background-color: #ffa726;
+        color: white;
+    }
+
+  
+  .open-btn {
+    background-color: #2196f3;
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .open-btn:hover {
+    background-color: #1976d2;
+  }
+  
+  .requests-panel {
+    flex: 2;
+    min-width: 300px;
+  }
+  
+  .request-card {
+    background: #ffffff;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .request-card p {
+    margin: 0.25rem 0;
+  }
+  
+  .actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+  
+  .approve {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  .deny {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  .approve:hover {
+    background-color: #43a047;
+  }
+  
+  .deny:hover {
+    background-color: #e53935;
+  }
+  
+  .loading,
+  .error,
+  .empty {
+    margin: 1rem 0;
+    font-weight: bold;
   }
   
