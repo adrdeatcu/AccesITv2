@@ -23,7 +23,7 @@ export class LoginComponent {
     if (result.success && result.user) {
       const userRole = result.user.role;
 
-      if (userRole === 'administrator') {
+      if (userRole === 'admin') {
         window.location.href = '/admin';
       } else if (userRole === 'portar') {
         window.location.href = '/gate';
