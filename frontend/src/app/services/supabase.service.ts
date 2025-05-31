@@ -38,6 +38,39 @@ export class SupabaseService {
   
     return { success: true, user };
   }
+
+  // Fetch access logs that are pending approval
+async getPendingAccessLogs() {
+    const { data, error } = await this.supabase
+      .from('access_logs')
+      .select(`id, timestamp, direction, bluetooth_code, user_id`)
+      .eq('needs_approval', true)
+      .is('approved', null)
+      .order('timestamp', { ascending: false });
+  
+    if (error) {
+      console.error('Error fetching pending logs:', error);
+      return [];
+    }
+  
+    return data;
+  }
+  
+  // Update access log to approved or denied
+  async updateAccessApproval(id: number, approved: boolean) {
+    const { error } = await this.supabase
+      .from('access_logs')
+      .update({ approved: approved })
+      .eq('id', id);
+  
+    if (error) {
+      console.error('Error updating approval status:', error);
+      return false;
+    }
+  
+    return true;
+  }
+  
   
   
   

@@ -1,0 +1,30 @@
+.container {
+    padding: 20px;
+    max-width: 600px;
+    margin: auto;
+  }
+  .title {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .info-box {
+    margin-bottom: 10px;
+  }
+  .status-closed { color: red; font-weight: bold; }
+  .status-open { color: green; font-weight: bold; }
+  .status-opening, .status-closing { color: orange; font-weight: bold; }
+  .request-card {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+  }
+  .error {
+    color: red;
+    font-weight: bold;
+  }
+  button {
+    margin-right: 10px;
+    margin-top: 5px;
+  }
+  

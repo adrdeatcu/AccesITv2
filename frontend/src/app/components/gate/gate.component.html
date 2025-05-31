@@ -1,1 +1,46 @@
-<p>gate works!</p>
+<div class="container">
+  <h2 class="title">Status Poartă</h2>
+
+  <!-- Current Time -->
+  <div class="info-box">
+    <strong>Ora Curentă:</strong> {{ currentTime }}
+  </div>
+
+  <!-- Gate Status -->
+  <div class="info-box">
+    <strong>Stare Poartă:</strong>
+    <span [ngClass]="{
+      'status-closed': gateStatus === 'închis',
+      'status-open': gateStatus === 'deschis',
+      'status-opening': gateStatus === 'în curs de deschidere',
+      'status-closing': gateStatus === 'în curs de închidere'
+    }">{{ gateStatus }}</span>
+  </div>
+
+  <!-- Open Gate Button -->
+  <button (click)="openGate()">Deschide Poarta</button>
+
+  <hr />
+
+  <h3>Cereri de Acces în Afara Orarului</h3>
+
+  <!-- Loading -->
+  <div *ngIf="loading">Se încarcă...</div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <!-- Pending Logs -->
+  <div *ngIf="!loading && pendingLogs.length === 0">
+    Nu există cereri de aprobare momentan.
+  </div>
+
+  <div *ngFor="let log of pendingLogs" class="request-card">
+    <p><strong>Nume:</strong> {{ log.employee_name || 'Necunoscut' }}</p>
+    <p><strong>Direcție:</strong> {{ log.direction }}</p>
+    <p><strong>Plăcuță mașină:</strong> {{ log.car_plate || '—' }}</p>
+    <p><strong>Data/Ora:</strong> {{ log.timestamp | date: 'short' }}</p>
+    <button (click)="handleApproval(log.id, true)">✅ Aprobă</button>
+    <button (click)="handleApproval(log.id, false)">❌ Respinge</button>
+  </div>
+</div>
