@@ -16,17 +16,29 @@ export class SupabaseService {
   }
 
   async loginUser(email: string, password: string) {
+    console.log('Trying login with:', email, password);
+  
     const { data, error } = await this.supabase
       .from('users')
-      .select('id, email, role')
-      .eq('email', email)
-      .eq('password', password)
-      .single();
-
-    if (error || !data) {
-      return { success: false, error: error?.message || 'User not found' };
+      .select('id, email, role, password') // include password to compare manually
+      .eq('email', email);
+  
+    console.log('Rows returned:', data);
+  
+    if (!data || data.length === 0) {
+      return { success: false, error: 'User not found.' };
     }
-
-    return { success: true, user: data };
+  
+    const user = data[0];
+  
+    // Manual password check
+    if (user.password !== password) {
+      return { success: false, error: 'Wrong password.' };
+    }
+  
+    return { success: true, user };
   }
+  
+  
+  
 }
