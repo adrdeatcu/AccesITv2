@@ -40,12 +40,26 @@ export class SupabaseService {
   }
 
   // Fetch access logs that are pending approval
-async getPendingAccessLogs() {
+  async getPendingAccessLogs() {
     const { data, error } = await this.supabase
       .from('access_logs')
-      .select(`id, timestamp, direction, bluetooth_code, user_id`)
+      .select(`
+        id,
+        timestamp,
+        direction,
+        bluetooth_code,
+        is_visitor,
+        employee_id,
+        authorized,
+        needs_approval,
+        employees (
+          name,
+          photo_url,
+          car_plate
+        )
+      `)
       .eq('needs_approval', true)
-      .is('approved', null)
+      .is('authorized', null)
       .order('timestamp', { ascending: false });
   
     if (error) {
@@ -53,8 +67,19 @@ async getPendingAccessLogs() {
       return [];
     }
   
-    return data;
+    console.log('✅ Fetched logs from Supabase:', data);
+  
+    // Flatten nested employee info for easy use in UI
+    return data.map(log => ({
+      ...log,
+      name: log.employees?.name ?? 'Necunoscut',
+      photo_url: log.employees?.photo_url ?? null,
+      car_plate: log.employees?.car_plate ?? ''
+    }));
   }
+  
+  
+  
   
   // Update access log to approved or denied
   async updateAccessApproval(id: number, approved: boolean) {

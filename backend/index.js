@@ -16,12 +16,12 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Health check route
+// Health check
 app.get('/', (req, res) => {
   res.send('API is running');
 });
 
-// Access event route (clean version)
+// Access event route
 app.post('/access-event', async (req, res) => {
   const { bluetooth_code, direction, is_visitor, validated_by } = req.body;
 
@@ -39,22 +39,23 @@ app.post('/access-event', async (req, res) => {
     return res.status(403).json({ error: 'Access disabled for this employee' });
   }
 
-  // Extract schedule start and end from "allowed_schedule" (e.g. "08:00-18:00")
+  // ⏰ Schedule parsing
   const [start, end] = employee.allowed_schedule.split('-');
   const now = new Date();
   const currentTime = now.toTimeString().slice(0, 5); // "HH:mm"
 
   const needsApproval = currentTime < start || currentTime > end;
 
+  // ✅ Insert with correct destructuring
   const { error: insertError } = await supabase.from('access_logs').insert([{
-    user_id: employee.id,
+    employee_id: employee.id,
     bluetooth_code,
     direction,
     is_visitor,
     validated_by,
     timestamp: now,
-    needs_approval: needsApproval,
-    approved: !needsApproval // approved = true if within hours, null or false otherwise
+    authorized: needsApproval ? null : true,
+    needs_approval: needsApproval
   }]);
 
   if (insertError) {
@@ -70,8 +71,6 @@ app.post('/access-event', async (req, res) => {
     needsApproval
   });
 });
-
-
 
 // Start server
 app.listen(PORT, () => {
