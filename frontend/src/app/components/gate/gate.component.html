@@ -45,11 +45,20 @@
     </div>
 
     <div *ngFor="let log of pendingLogs" class="request-card">
-      <p><strong>Nume:</strong> {{ log.name }}</p>
-      <p><strong>Cod Bluetooth:</strong> {{ log.bluetooth_code }}</p>
-      <p><strong>Direcție:</strong> {{ log.direction }}</p>
-      <p><strong>Vizitator:</strong> {{ log.is_visitor ? 'Da' : 'Nu' }}</p>
-      <p><strong>Data/Ora:</strong> {{ log.timestamp | date: 'short' }}</p>
+      <div class="request-header">
+        <img *ngIf="log.photo_url" [src]="log.photo_url" alt="Employee photo" class="employee-photo">
+        <div class="request-info">
+          <p><strong>Nume:</strong> {{ log.name }}</p>
+          <p><strong>Cod Bluetooth:</strong> {{ log.bluetooth_code }}</p>
+          <p><strong>Direcție:</strong> {{ log.direction }}</p>
+          <p><strong>Program permis:</strong> {{ log.allowed_schedule }}</p>
+          <p><strong>Oră solicitare:</strong> {{ log.timestamp | date: 'HH:mm' }}</p>
+          <p class="schedule-warning">
+            <i class="fas fa-clock"></i>
+            Solicitare în afara programului: {{ log.allowed_schedule }}
+          </p>
+        </div>
+      </div>
       <div class="actions">
         <button class="approve" (click)="handleApproval(log.id, true)">
           <i class="fas fa-check"></i> Acceptă

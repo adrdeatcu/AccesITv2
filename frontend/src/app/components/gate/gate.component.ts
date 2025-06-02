@@ -23,6 +23,11 @@ export class GateComponent implements OnInit {
     setInterval(() => this.updateTime(), 1000);
     this.loadPendingLogs();
     setInterval(() => this.loadPendingLogs(), 10000);
+
+    // Add this subscription
+    this.supabaseService.accessRequest$.subscribe(() => {
+      this.loadPendingLogs(); // Reload logs when new request comes in
+    });
   }
 
   updateTime() {
@@ -73,9 +78,21 @@ export class GateComponent implements OnInit {
   async handleApproval(id: number, approved: boolean) {
     const success = await this.supabaseService.updateAccessApproval(id, approved);
     if (success) {
-      this.loadPendingLogs();
+      // Open gate if approved
+      if (approved) {
+        this.openGate();
+      }
+      await this.loadPendingLogs();
     } else {
       alert('Failed to update access status.');
     }
+  }
+
+  // Add method to check if time is within schedule
+  isWithinSchedule(schedule: string): boolean {
+    const [start, end] = schedule.split('-');
+    const now = new Date();
+    const currentTime = now.toTimeString().slice(0, 5);
+    return currentTime >= start && currentTime <= end;
   }
 }

@@ -297,3 +297,31 @@
     font-weight: 600;
     color: #2c3e50;
 }
+
+.request-header {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.employee-photo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e0e0e0;
+}
+
+.request-info {
+  flex: 1;
+}
+
+.schedule-warning {
+  color: #f39c12;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.schedule-warning i {
+  margin-right: 0.5rem;
+}
