@@ -59,21 +59,28 @@ export class SupabaseService {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'access_logs',
-          filter: 'needs_approval=eq.true'
+          table: 'access_logs'
+          // no filter for now
         },
         (payload) => {
-          console.log('🔔 New access request received:', payload);
-          const raw = payload.new as any;
-
-          // Extra safety: try to fetch full details on demand
+          console.log('🔔 Realtime insert received:', payload);
+  
           this.getPendingAccessLogs().then(logs => {
-            this.accessRequestSubject.next(logs[0]); // just emit the latest
+            if (logs.length > 0) {
+              console.log('✅ Emitting log to UI:', logs[0]);
+              this.accessRequestSubject.next(logs[0]);
+            } else {
+              console.log('ℹ️ No pending logs to emit');
+            }
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('🔗 Realtime subscription status:', status);
+      });
   }
+  
+  
 
   async loginUser(email: string, password: string) {
     const { data, error } = await this.supabase
