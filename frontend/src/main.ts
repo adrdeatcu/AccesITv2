@@ -8,6 +8,9 @@ import { AppComponent } from './app/app.component';
 import { LoginComponent } from './app/components/login/login.component';
 import { GateComponent } from './app/components/gate/gate.component';
 import { AdminComponent } from './app/components/admin/admin.component';
+import { AccessLogListComponent } from './app/components/access-log-list/access-log-list.component'; // NEW
+import { EmployeeListComponent } from './app/components/employee-list/employee-list.component';     // NEW
+
 import { AuthGuard } from './app/guards/auth.guard';
 import { RoleGuard } from './app/guards/role.guard';
 
@@ -22,6 +25,18 @@ const routes: Route[] = [
   { 
     path: 'admin', 
     component: AdminComponent,
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['admin'] }
+  },
+  { 
+    path: 'admin/access-logs', 
+    component: AccessLogListComponent,
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['admin'] }
+  },
+  { 
+    path: 'admin/employees', 
+    component: EmployeeListComponent,
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['admin'] }
   },

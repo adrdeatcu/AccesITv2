@@ -368,3 +368,47 @@ app.post('/test-bluetooth-access', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// ✅ Admin: Get all access logs
+app.get('/admin/access-logs', async (req, res) => {
+  const { data, error } = await supabase
+    .from('access_logs')
+    .select(`
+      id,
+      timestamp,
+      direction,
+      bluetooth_code,
+      is_visitor,
+      employee_id,
+      authorized,
+      needs_approval,
+      employees (
+        name,
+        photo_url,
+        allowed_schedule
+      )
+    `)
+    .order('timestamp', { ascending: false });
+
+  if (error) {
+    console.error('❌ Failed to fetch access logs:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+
+  return res.json({ success: true, logs: data });
+});
+
+// ✅ Admin: Get all employees
+app.get('/admin/employees', async (req, res) => {
+  const { data, error } = await supabase
+    .from('employees')
+    .select('*')
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('❌ Failed to fetch employees:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+
+  return res.json({ success: true, employees: data });
+});

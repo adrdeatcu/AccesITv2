@@ -74,4 +74,39 @@ export class SupabaseService {
     localStorage.removeItem('sb-fvdjsuvfaxhgevdibfsa-auth-token');
     sessionStorage.removeItem('sb-fvdjsuvfaxhgevdibfsa-auth-token');
   }
+
+  async getAllAccessLogs(): Promise<any[]> {
+    try {
+      const response = await fetch('http://localhost:3000/admin/access-logs');
+      const result = await response.json();
+  
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to load logs');
+      }
+  
+      return result.logs;
+    } catch (error) {
+      console.error('❌ Failed to fetch access logs:', error);
+      return [];
+    }
+  }
+
+  async getAllEmployees(): Promise<any[]> {
+    try {
+      const response = await fetch('http://localhost:3000/admin/employees');
+      const result = await response.json();
+  
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to load employees');
+      }
+  
+      return result.employees;
+    } catch (error) {
+      console.error('❌ Failed to fetch employees:', error);
+      return [];
+    }
+  }
+  
 }
+
+
