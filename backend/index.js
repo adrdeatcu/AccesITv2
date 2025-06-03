@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,26 +19,148 @@ const supabase = createClient(
 // ✅ TEMPORARY FLAG used by ESP32 to open gate
 let temporaryFreeAccess = false;
 
+// AES256 Configuration
+const AES_KEY = process.env.AES_KEY || 'your-32-character-secret-key-here'; // 32 chars for AES-256
+const ALGORITHM = 'aes-256-cbc';
+
+// AES Encryption function
+function encrypt(text) {
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipher(ALGORITHM, AES_KEY);
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  return iv.toString('hex') + ':' + encrypted;
+}
+
+// AES Decryption function
+function decrypt(text) {
+  try {
+    const textParts = text.split(':');
+    const iv = Buffer.from(textParts.shift(), 'hex');
+    const encryptedText = textParts.join(':');
+    const decipher = crypto.createDecipher(ALGORITHM, AES_KEY);
+    let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  } catch (error) {
+    console.error('Decryption error:', error);
+    return null;
+  }
+}
+
 // Health check
 app.get('/', (req, res) => {
   res.send('API is running');
 });
 
-// ✅ Bluetooth access from mobile
+// ✅ Bluetooth access from mobile with AES256 encryption
 app.post('/verify-access-from-mobile', async (req, res) => {
-  console.log('📨 Received request on /verify-access-from-mobile');
+  console.log('📨 Received encrypted request on /verify-access-from-mobile');
   console.log('📡 Request body:', req.body);
 
-  const { ble_code, direction } = req.body;
+  const { encrypted_data } = req.body;
+  
+  if (!encrypted_data) {
+    return res.status(400).json({
+      encrypted_response: encrypt(JSON.stringify({
+        granted: false,
+        message: 'Invalid request: missing encrypted_data'
+      }))
+    });
+  }
+
+  // Decrypt the incoming data
+  const decryptedData = decrypt(encrypted_data);
+  if (!decryptedData) {
+    return res.status(400).json({
+      encrypted_response: encrypt(JSON.stringify({
+        granted: false,
+        message: 'Invalid encryption or corrupted data'
+      }))
+    });
+  }
+
+  let parsedData;
+  try {
+    parsedData = JSON.parse(decryptedData);
+  } catch (error) {
+    return res.status(400).json({
+      encrypted_response: encrypt(JSON.stringify({
+        granted: false,
+        message: 'Invalid JSON format'
+      }))
+    });
+  }
+
+  const { ble_code, direction, type } = parsedData;
   const validatedById = 'c302e64d-601c-4cc2-895d-09648c83bbed';
 
   if (!ble_code) {
     return res.status(400).json({
-      granted: false,
-      message: 'Invalid request: missing ble_code'
+      encrypted_response: encrypt(JSON.stringify({
+        granted: false,
+        message: 'Invalid request: missing ble_code'
+      }))
     });
   }
 
+  // Handle exit request
+  if (direction === 'exit') {
+    const { data: employee, error } = await supabase
+      .from('employees')
+      .select('*')
+      .eq('bluetooth_code', ble_code)
+      .single();
+
+    if (error || !employee) {
+      console.log('❌ Employee not found for exit:', ble_code);
+      return res.json({
+        encrypted_response: encrypt(JSON.stringify({
+          can_exit: false,
+          message: 'Employee not found'
+        }))
+      });
+    }
+
+    const now = new Date();
+    const { error: logError } = await supabase
+      .from('access_logs')
+      .insert([{
+        employee_id: employee.id,
+        bluetooth_code: ble_code,
+        direction: 'exit',
+        is_visitor: false,
+        timestamp: now,
+        authorized: true,
+        needs_approval: false,
+        validated_by: validatedById
+      }]);
+
+    if (logError) {
+      console.error('❌ Failed to insert exit log:', logError);
+      return res.status(500).json({
+        encrypted_response: encrypt(JSON.stringify({
+          can_exit: false,
+          message: 'Database error'
+        }))
+      });
+    }
+
+    // Trigger gate for exit
+    temporaryFreeAccess = true;
+    console.log(`🚀 temporaryFreeAccess set to TRUE for ESP32 on EXIT`);
+    console.log(`✅ EXIT granted for: ${employee.name}`);
+
+    return res.json({
+      encrypted_response: encrypt(JSON.stringify({
+        can_exit: true,
+        message: `La revedere, ${employee.name}!`,
+        employee_name: employee.name
+      }))
+    });
+  }
+
+  // Handle entry request
   const { data: employee, error } = await supabase
     .from('employees')
     .select('*')
@@ -47,13 +170,15 @@ app.post('/verify-access-from-mobile', async (req, res) => {
   if (error || !employee) {
     console.log('❌ Employee not found for code:', ble_code);
     return res.json({
-      granted: false,
-      message: 'denied'
+      encrypted_response: encrypt(JSON.stringify({
+        granted: false,
+        message: 'denied'
+      }))
     });
   }
 
   const now = new Date();
-  const accessDirection = direction === 'exit' ? 'exit' : 'entry';
+  const accessDirection = 'entry';
 
   const { error: logError } = await supabase
     .from('access_logs')
@@ -65,30 +190,34 @@ app.post('/verify-access-from-mobile', async (req, res) => {
       timestamp: now,
       authorized: true,
       needs_approval: false,
-      validated_by: validatedById
+      validated_by: validatedById,
+      access_type: type || 'pedestrian'
     }]);
 
   if (logError) {
     console.error('❌ Failed to insert log:', logError);
     return res.status(500).json({
-      granted: false,
-      message: 'internal_error'
+      encrypted_response: encrypt(JSON.stringify({
+        granted: false,
+        message: 'internal_error'
+      }))
     });
   }
 
-  // ✅ ESP32 Trigger for BOTH entry and exit
+  // ✅ ESP32 Trigger for entry
   temporaryFreeAccess = true;
   console.log(`🚀 temporaryFreeAccess set to TRUE for ESP32 on ${accessDirection}`);
-
-  console.log(`✅ ${accessDirection.toUpperCase()} granted for: ${employee.name}`);
+  console.log(`✅ ${accessDirection.toUpperCase()} granted for: ${employee.name} (${type || 'pedestrian'})`);
 
   return res.json({
-    granted: true,
-    message: 'granted',
-    employee_name: employee.name
+    encrypted_response: encrypt(JSON.stringify({
+      granted: true,
+      message: 'granted',
+      user: employee.name,
+      employee_name: employee.name
+    }))
   });
 });
-
 
 
 // ✅ ESP32 access polling endpoint
