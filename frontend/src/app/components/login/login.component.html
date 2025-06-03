@@ -1,6 +1,6 @@
 <div class="login-container">
   <form (ngSubmit)="login()" class="login-form">
-    <h2>Login</h2>
+    <h2>Logare</h2>
     
     <div class="form-group">
       <label for="email">Email:</label>
@@ -9,18 +9,18 @@
         id="email"
         [(ngModel)]="email" 
         name="email"
-        placeholder="Enter your email"
+        placeholder="Introduceti emailul"
         required>
     </div>
 
     <div class="form-group">
-      <label for="password">Password:</label>
+      <label for="password">Parola:</label>
       <input 
         type="password" 
         id="password"
         [(ngModel)]="password" 
         name="password"
-        placeholder="Enter your password"
+        placeholder="Introduceti parola"
         required>
     </div>
 
@@ -29,8 +29,7 @@
     </div>
 
     <button type="submit" [disabled]="isLoading" class="login-btn">
-      <span *ngIf="!isLoading">Login</span>
-      <span *ngIf="isLoading">Logging in...</span>
+      <span *ngIf="!isLoading">Logare</span>
     </button>
   </form>
 </div>
