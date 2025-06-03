@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// ✅ Use Supabase Service Role Key (not anon key)
+// ✅ Supabase with service role key
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_KEY
@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
   res.send('API is running');
 });
 
-// ✅ Insert access event
+// ✅ Existing access-event logic
 app.post('/access-event', async (req, res) => {
   const { bluetooth_code, direction, is_visitor, validated_by } = req.body;
 
@@ -69,7 +69,89 @@ app.post('/access-event', async (req, res) => {
   });
 });
 
-// ✅ New PATCH endpoint to approve or deny
+// ✅ New: Bluetooth access validation from mobile
+app.post('/verify-access-from-mobile', async (req, res) => {
+  console.log('📨 Received request on /verify-access-from-mobile');
+  console.log('📡 Request body:', req.body);  // <-- This is the important log
+
+  const { ble_code } = req.body;
+
+  if (!ble_code) {
+    return res.status(400).json({
+      granted: false,
+      message: 'Invalid request: missing ble_code'
+    });
+  }
+
+  // ... rest of your code unchanged
+
+
+  // Step 1: Find employee
+  const { data: employee, error: lookupError } = await supabase
+    .from('employees')
+    .select('*')
+    .eq('bluetooth_code', ble_code)
+    .single();
+
+  if (lookupError || !employee) {
+    return res.json({
+      granted: false,
+      message: 'denied'
+    });
+  }
+
+  if (!employee.access_enabled) {
+    return res.json({
+      granted: false,
+      message: 'denied'
+    });
+  }
+
+  const now = new Date();
+  const currentTime = now.toTimeString().slice(0, 5);
+  const [start, end] = employee.allowed_schedule.split('-');
+  const inSchedule = currentTime >= start && currentTime <= end;
+
+  let granted = false;
+  let message = '';
+  let needsApproval = false;
+
+  if (inSchedule) {
+    granted = true;
+    message = 'granted';
+  } else {
+    granted = false;
+    message = 'pending_approval';
+    needsApproval = true;
+  }
+
+  // Step 3: Insert into access_logs
+  const { error: insertError } = await supabase.from('access_logs').insert([{
+    employee_id: employee.id,
+    bluetooth_code: ble_code,
+    direction: 'entry',
+    is_visitor: false,
+    timestamp: now,
+    authorized: inSchedule ? true : null,
+    needs_approval: needsApproval
+  }]);
+
+  if (insertError) {
+    console.error('Insert failed:', insertError);
+    return res.status(500).json({
+      granted: false,
+      message: 'internal_error'
+    });
+  }
+
+  return res.json({
+    granted,       // For ESP32
+    message,       // For mobile
+    employee_name: employee.name
+  });
+});
+
+// ✅ Gatekeeper approval route
 app.patch('/approve-access/:id', async (req, res) => {
   const { id } = req.params;
   const { approved } = req.body;
@@ -90,7 +172,7 @@ app.patch('/approve-access/:id', async (req, res) => {
   return res.json({ success: true });
 });
 
-// Optional test endpoint
+// ✅ Optional test
 app.post('/test-bluetooth-access', async (req, res) => {
   const { bluetooth_code } = req.body;
 
