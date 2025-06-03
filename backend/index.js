@@ -3,24 +3,24 @@ const cors = require('cors');
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 
-// Supabase connection
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
-);
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 
+// ✅ Use Supabase Service Role Key (not anon key)
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+);
+
 // Health check
 app.get('/', (req, res) => {
   res.send('API is running');
 });
 
-// Access event route
+// ✅ Insert access event
 app.post('/access-event', async (req, res) => {
   const { bluetooth_code, direction, is_visitor, validated_by } = req.body;
 
@@ -43,7 +43,6 @@ app.post('/access-event', async (req, res) => {
   const currentTime = now.toTimeString().slice(0, 5);
   const needsApproval = currentTime < start || currentTime > end;
 
-  // ✅ Always insert, regardless of schedule
   const { error: insertError } = await supabase.from('access_logs').insert([{
     employee_id: employee.id,
     bluetooth_code,
@@ -70,8 +69,28 @@ app.post('/access-event', async (req, res) => {
   });
 });
 
+// ✅ New PATCH endpoint to approve or deny
+app.patch('/approve-access/:id', async (req, res) => {
+  const { id } = req.params;
+  const { approved } = req.body;
 
-// Gatekeeper approval route (optional test)
+  const { error } = await supabase
+    .from('access_logs')
+    .update({
+      authorized: approved,
+      needs_approval: false,
+      approved: approved
+    })
+    .eq('id', id);
+
+  if (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+
+  return res.json({ success: true });
+});
+
+// Optional test endpoint
 app.post('/test-bluetooth-access', async (req, res) => {
   const { bluetooth_code } = req.body;
 

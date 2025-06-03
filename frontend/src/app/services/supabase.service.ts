@@ -148,22 +148,28 @@ export class SupabaseService {
   }
 
   async updateAccessApproval(id: number, approved: boolean): Promise<boolean> {
-    const { error } = await this.supabase
-      .from('access_logs')
-      .update({
-        authorized: approved,
-        needs_approval: false,
-        approved: approved
-      })
-      .eq('id', id);
-
-    if (error) {
-      console.error('❌ Error updating approval:', error);
+    try {
+      const response = await fetch(`http://localhost:3000/approve-access/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ approved })
+      });
+  
+      if (!response.ok) {
+        const errorBody = await response.json();
+        console.error('❌ Server error:', errorBody);
+        return false;
+      }
+  
+      return true;
+    } catch (err) {
+      console.error('❌ Network or fetch error:', err);
       return false;
     }
-
-    return true;
   }
+  
 
   async checkAccessRequest(bluetoothCode: string, direction: string) {
     const { data: employee, error: employeeError } = await this.supabase
