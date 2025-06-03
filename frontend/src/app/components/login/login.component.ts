@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { SupabaseService } from '../../services/supabase.service';
 
 @Component({
@@ -14,24 +15,43 @@ export class LoginComponent {
   email = '';
   password = '';
   loginError = '';
+  isLoading = false;
 
-  constructor(private supabaseService: SupabaseService) {}
+  constructor(
+    private supabaseService: SupabaseService,
+    private router: Router
+  ) {}
 
   async login() {
-    const result = await this.supabaseService.loginUser(this.email, this.password);
+    if (!this.email || !this.password) {
+      this.loginError = 'Te rog completează toate câmpurile';
+      return;
+    }
 
-    if (result.success && result.user) {
-      const userRole = result.user.role;
+    this.isLoading = true;
+    this.loginError = '';
 
-      if (userRole === 'admin') {
-        window.location.href = '/admin';
-      } else if (userRole === 'portar') {
-        window.location.href = '/gate';
+    try {
+      const result = await this.supabaseService.loginUser(this.email, this.password);
+
+      this.isLoading = false;
+
+      if (result.success && result.user) {
+        const userRole = result.user.role;
+
+        if (userRole === 'admin') {
+          await this.router.navigate(['/admin']);
+        } else if (userRole === 'portar') {
+          await this.router.navigate(['/gate']);
+        } else {
+          this.loginError = `Rol necunoscut: ${userRole}`;
+        }
       } else {
-        this.loginError = 'Rol necunoscut!';
+        this.loginError = result.error || 'Email sau parolă incorectă';
       }
-    } else {
-      this.loginError = 'Email sau parolă incorectă';
+    } catch (error) {
+      this.isLoading = false;
+      this.loginError = 'Eroare de conectare. Încearcă din nou.';
     }
   }
 }

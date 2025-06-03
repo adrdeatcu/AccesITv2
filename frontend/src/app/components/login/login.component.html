@@ -1,30 +1,36 @@
 <div class="login-container">
-    <h2>Autentificare</h2>
-  
-    <form (ngSubmit)="login()" #loginForm="ngForm">
-      <label for="email">Email</label>
-      <input
+  <form (ngSubmit)="login()" class="login-form">
+    <h2>Login</h2>
+    
+    <div class="form-group">
+      <label for="email">Email:</label>
+      <input 
+        type="email" 
         id="email"
-        type="email"
+        [(ngModel)]="email" 
         name="email"
-        [(ngModel)]="email"
-        required
-        placeholder="Introdu emailul"
-      />
-  
-      <label for="password">Parolă</label>
-      <input
+        placeholder="Enter your email"
+        required>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password:</label>
+      <input 
+        type="password" 
         id="password"
-        type="password"
+        [(ngModel)]="password" 
         name="password"
-        [(ngModel)]="password"
-        required
-        placeholder="Introdu parola"
-      />
-  
-      <button type="submit" [disabled]="!loginForm.valid">Autentificare</button>
-  
-      <p *ngIf="loginError" class="error-message">{{ loginError }}</p>
-    </form>
-  </div>
-  
+        placeholder="Enter your password"
+        required>
+    </div>
+
+    <div class="error-message" *ngIf="loginError">
+      {{ loginError }}
+    </div>
+
+    <button type="submit" [disabled]="isLoading" class="login-btn">
+      <span *ngIf="!isLoading">Login</span>
+      <span *ngIf="isLoading">Logging in...</span>
+    </button>
+  </form>
+</div>

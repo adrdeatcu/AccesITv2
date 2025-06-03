@@ -1,0 +1,8 @@
+{
+  "/api/*": {
+    "target": "https://fvdjsuvfaxhgevdibfsa.supabase.co",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

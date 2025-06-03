@@ -1,4 +1,11 @@
 <div class="gate-container">
+  <header class="gate-header">
+    <h1>Portar Dashboard</h1>
+    <button (click)="logout()" class="logout-btn">
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
+  </header>
+
   <div class="status-panel">
     <h1 class="clock">{{ currentTime }}</h1>
     
@@ -19,14 +26,15 @@
     </div>
 
     <button class="open-btn" (click)="openGate()" [disabled]="gateStatus !== 'închis'">
-      <i class="fas fa-door-open"></i> Deschide Poarta
+      <i class="fas fa-door-open"></i> Deschide Poarta Manual
     </button>
   </div>
 
   <div class="requests-panel">
     <h2>
       <i class="fas fa-clipboard-list"></i>
-      Cereri de Acces
+      Cereri de Acces în Așteptare
+      <span class="badge" *ngIf="pendingLogs.length > 0">{{ pendingLogs.length }}</span>
     </h2>
 
     <div *ngIf="loading" class="loading">
@@ -37,22 +45,34 @@
     <div *ngIf="error" class="error">
       <i class="fas fa-exclamation-triangle"></i>
       {{ error }}
+      <button (click)="loadPendingLogs()" class="retry-btn">Încearcă din nou</button>
     </div>
     
-    <div *ngIf="!loading && pendingLogs.length === 0" class="empty">
+    <div *ngIf="!loading && !error && pendingLogs.length === 0" class="empty">
       <i class="fas fa-check-circle"></i>
       Nu există cereri în așteptare
     </div>
 
-    <div *ngFor="let log of pendingLogs" class="request-card">
+    <div *ngFor="let log of pendingLogs; trackBy: trackByLogId" class="request-card">
       <div class="request-header">
-        <img *ngIf="log.photo_url" [src]="log.photo_url" alt="Employee photo" class="employee-photo">
+        <img *ngIf="log.photo_url" 
+             [src]="log.photo_url" 
+             alt="Employee photo" 
+             class="employee-photo"
+             (error)="onImageError($event)">
+        <div *ngIf="!log.photo_url" class="employee-placeholder">
+          <i class="fas fa-user"></i>
+        </div>
         <div class="request-info">
           <p><strong>Nume:</strong> {{ log.name }}</p>
           <p><strong>Cod Bluetooth:</strong> {{ log.bluetooth_code }}</p>
-          <p><strong>Direcție:</strong> {{ log.direction }}</p>
+          <p><strong>Direcție:</strong> 
+            <span class="direction" [ngClass]="log.direction">
+              {{ log.direction === 'entry' ? 'Intrare' : 'Ieșire' }}
+            </span>
+          </p>
           <p><strong>Program permis:</strong> {{ log.allowed_schedule }}</p>
-          <p><strong>Oră solicitare:</strong> {{ log.timestamp | date: 'HH:mm' }}</p>
+          <p><strong>Oră solicitare:</strong> {{ log.timestamp | date: 'HH:mm:ss' }}</p>
           <p class="schedule-warning">
             <i class="fas fa-clock"></i>
             Solicitare în afara programului: {{ log.allowed_schedule }}
