@@ -1,27 +1,41 @@
 <div class="admin-container">
   <header class="admin-header">
-    <h1>Admin Dashboard</h1>
+    <h1>Panou Administrator</h1>
     <button (click)="logout()" class="logout-btn">
-      <i class="fas fa-sign-out-alt"></i> Logout
+      <i class="fas fa-sign-out-alt"></i> Deconectare
     </button>
   </header>
 
   <main class="admin-content">
     <div class="welcome-section">
       <h2>Bun venit în panoul de administrare!</h2>
-      <p *ngIf="currentUser">Salut, <strong>{{ currentUser.name || currentUser.email }}</strong>!</p>
-      <p>Rolul tău: <span class="role-badge">{{ currentUser?.role | titlecase }}</span></p>
+      <p *ngIf="currentUser">Salut, <strong>{{ currentUser.name?.split(' ')[0] || currentUser.email }}</strong>!</p>
+      <p>Rolul tău: <span class="role-badge">Administrator</span></p>
     </div>
  
     <div class="info-section">
       <div class="info-card">
         <h3><i class="fas fa-users"></i> Gestionare Angajați</h3>
-        <p>Funcționalitatea va fi adăugată în curând.</p>
+        <p>Adaugă sau șterge angajați din sistem</p>
+        <button class="register-btn" routerLink="/admin/manage-employees">
+          <i class="fas fa-user-plus"></i> Adaugă/Șterge angajați
+        </button>
       </div>
 
       <div class="info-card">
-        <h3><i class="fas fa-list"></i> Jurnalul Accesului</h3>
-        <p>Funcționalitatea va fi adăugată în curând.</p>
+        <h3><i class="fas fa-book"></i> Jurnalul Accesului</h3>
+        <p>Monitorizează toate intrările și ieșirile</p>
+        <button class="register-btn" routerLink="/admin/access-logs">
+          <i class="fas fa-list-ul"></i> Verifică intrările/ieșirile
+        </button>
+      </div>
+
+      <div class="info-card">
+        <h3><i class="fas fa-id-card"></i> Lista Angajați</h3>
+        <p>Vizualizează toți angajații din sistem</p>
+        <button class="register-btn" routerLink="/admin/employees">
+          <i class="fas fa-users"></i> Verifică lista completă cu angajați
+        </button>
       </div>
     </div>
   </main>

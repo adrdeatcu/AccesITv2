@@ -1,23 +1,26 @@
 .gate-container {
     min-height: 100vh;
+    max-width: 100vw;
     background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
     display: flex;
     flex-direction: column;
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
 }
 
 .status-panel {
     flex: 1;
-    min-width: 320px;
-    max-width: 450px;
+    min-width: 300px;
+    max-width: 400px;
+    width: 100%;
     background: white;
-    padding: 2.5rem;
+    padding: 1.5rem;
     border-radius: 16px;
     text-align: center;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
     height: fit-content;
     position: sticky;
-    top: 2rem;
+    top: 5rem;
 }
 
 .clock {
@@ -99,9 +102,10 @@
 
 .requests-panel {
     flex: 2;
-    min-width: 400px;
+    min-width: 300px;
+    width: 100%;
     background: white;
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 16px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
 }
@@ -122,6 +126,8 @@
     border: 1px solid #e0e0e0;
     transition: all 0.3s ease;
     animation: slideIn 0.3s ease-out;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 @keyframes slideIn {
@@ -204,8 +210,9 @@
     padding: 2rem;
     margin: 1rem 0 2rem;
     position: relative;
-    height: 200px;
+    height: 180px;
     border: 2px solid #e0e0e0;
+    max-width: 100%;
 }
 
 .gate {
@@ -329,7 +336,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
+  padding: 1rem;
   background: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;
@@ -337,6 +344,7 @@
   z-index: 100;
   width: 100%;
   margin-bottom: 2rem;
+  box-sizing: border-box;
 }
 
 .gate-header h1 {
@@ -372,6 +380,56 @@
 
 .content-wrapper {
   display: flex;
-  gap: 2.5rem;
-  padding: 0 2rem 2rem 2rem;
+  gap: 1.5rem;
+  padding: 0 1.5rem 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* Add media queries for responsive design */
+@media screen and (max-width: 1024px) {
+    .content-wrapper {
+        flex-direction: column;
+    }
+
+    .status-panel {
+        max-width: 100%;
+        position: relative;
+        top: 0;
+    }
+
+    .clock {
+        font-size: 2.5rem;
+    }
+
+    .gate-header h1 {
+        font-size: 1.5rem;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .gate-header {
+        padding: 1rem;
+    }
+
+    .content-wrapper {
+        padding: 0 1rem 1rem;
+    }
+
+    .request-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .request-info {
+        width: 100%;
+    }
+
+    .actions {
+        flex-direction: column;
+    }
+
+    .approve, .deny {
+        width: 100%;
+    }
 }
