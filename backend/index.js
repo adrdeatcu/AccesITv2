@@ -20,30 +20,46 @@ const supabase = createClient(
 let temporaryFreeAccess = false;
 
 // AES256 Configuration
-const AES_KEY = process.env.AES_KEY || 'your-32-character-secret-key-here'; // 32 chars for AES-256
+const AES_KEY= process.env.AES_KEY;// Ensure this is a base64 encoded 32-byte key
 const ALGORITHM = 'aes-256-cbc';
 
-// AES Encryption function
+// Create proper key buffer
+const keyBuffer = Buffer.from(AES_KEY, 'base64').subarray(0, 32);
+
+// Fixed AES Encryption function
 function encrypt(text) {
   const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipher(ALGORITHM, AES_KEY);
-  let encrypted = cipher.update(text, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  return iv.toString('hex') + ':' + encrypted;
+  const cipher = crypto.createCipheriv(ALGORITHM, keyBuffer, iv);
+  let encrypted = cipher.update(text, 'utf8', 'base64');
+  encrypted += cipher.final('base64');
+  return iv.toString('base64') + ':' + encrypted;
 }
 
-// AES Decryption function
-function decrypt(text) {
+// Fixed AES Decryption function
+function decrypt(encryptedData) {
   try {
-    const textParts = text.split(':');
-    const iv = Buffer.from(textParts.shift(), 'hex');
-    const encryptedText = textParts.join(':');
-    const decipher = crypto.createDecipher(ALGORITHM, AES_KEY);
-    let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+    console.log('🔐 Encrypted data received:', encryptedData);
+    
+    const textParts = encryptedData.split(':');
+    if (textParts.length !== 2) {
+      console.error('❌ Invalid encrypted data format');
+      return null;
+    }
+    
+    const iv = Buffer.from(textParts[0], 'base64');
+    const encryptedText = textParts[1];
+    
+    console.log('🔑 IV length:', iv.length);
+    console.log('🔑 Encrypted text length:', encryptedText.length);
+    
+    const decipher = crypto.createDecipheriv(ALGORITHM, keyBuffer, iv);
+    let decrypted = decipher.update(encryptedText, 'base64', 'utf8');
     decrypted += decipher.final('utf8');
+    
+    console.log('✅ Decryption successful');
     return decrypted;
   } catch (error) {
-    console.error('Decryption error:', error);
+    console.error('❌ Decryption error:', error);
     return null;
   }
 }
@@ -191,7 +207,6 @@ app.post('/verify-access-from-mobile', async (req, res) => {
       authorized: true,
       needs_approval: false,
       validated_by: validatedById,
-      access_type: type || 'pedestrian'
     }]);
 
   if (logError) {
