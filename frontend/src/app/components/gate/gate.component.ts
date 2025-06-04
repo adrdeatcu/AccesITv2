@@ -28,9 +28,11 @@ export class GateComponent implements OnInit, OnDestroy {
   pendingLogs: AccessLog[] = [];
   loading = false;
   error: string = '';
-  
+
+  lastScannedEmployee: any = null;
   private timeInterval?: number;
   private logsInterval?: number;
+  private scanPollInterval?: number;
   private subscription?: Subscription;
 
   constructor(
@@ -41,21 +43,17 @@ export class GateComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.updateTime();
     this.timeInterval = window.setInterval(() => this.updateTime(), 1000);
+    this.logsInterval = window.setInterval(() => this.loadPendingLogs(), 10000);
+    this.scanPollInterval = window.setInterval(() => this.checkForScanEvent(), 3000);
     
     this.loadPendingLogs();
-    this.logsInterval = window.setInterval(() => this.loadPendingLogs(), 10000);
   }
 
   ngOnDestroy(): void {
-    if (this.timeInterval) {
-      clearInterval(this.timeInterval);
-    }
-    if (this.logsInterval) {
-      clearInterval(this.logsInterval);
-    }
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
+    if (this.timeInterval) clearInterval(this.timeInterval);
+    if (this.logsInterval) clearInterval(this.logsInterval);
+    if (this.scanPollInterval) clearInterval(this.scanPollInterval);
+    if (this.subscription) this.subscription.unsubscribe();
   }
 
   updateTime() {
@@ -65,15 +63,13 @@ export class GateComponent implements OnInit, OnDestroy {
 
   async openGate() {
     if (this.gateStatus !== 'închis') return;
-  
-    // 🔁 Backend call to trigger ESP flag
+
     const success = await this.supabaseService.triggerManualGateOpen();
     if (!success) {
       alert('Eroare la deschiderea porții. Încearcă din nou.');
       return;
     }
-  
-    // ✅ Continue with the animation
+
     this.gateStatus = 'în curs de deschidere';
     setTimeout(() => {
       this.gateStatus = 'deschis';
@@ -85,15 +81,12 @@ export class GateComponent implements OnInit, OnDestroy {
       }, 3000);
     }, 2000);
   }
-  
 
   async loadPendingLogs() {
     this.loading = true;
     this.error = '';
     try {
-      // For now, just set empty array since we don't have the backend method
       this.pendingLogs = [];
-      console.log('Loading pending logs...');
     } catch (err) {
       this.error = 'Nu s-au putut încărca cererile de acces.';
       console.error('Error loading pending logs:', err);
@@ -105,9 +98,7 @@ export class GateComponent implements OnInit, OnDestroy {
   async handleApproval(id: number, approved: boolean) {
     try {
       console.log(`Handling approval for ID ${id}: ${approved}`);
-      if (approved) {
-        this.openGate();
-      }
+      if (approved) this.openGate();
       await this.loadPendingLogs();
     } catch (error) {
       console.error('Error handling approval:', error);
@@ -115,12 +106,10 @@ export class GateComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Add the missing trackBy method
   trackByLogId(index: number, log: AccessLog): number {
     return log.id;
   }
 
-  // Add the missing onImageError method
   onImageError(event: any) {
     event.target.style.display = 'none';
   }
@@ -128,5 +117,18 @@ export class GateComponent implements OnInit, OnDestroy {
   async logout() {
     await this.supabaseService.logout();
     this.router.navigate(['/login']);
+  }
+
+  async checkForScanEvent() {
+    try {
+      const res = await fetch('http://localhost:3000/api/last-scan');
+      const result = await res.json();
+      if (result.found) {
+        this.lastScannedEmployee = result.employee;
+        setTimeout(() => this.lastScannedEmployee = null, 6000);
+      }
+    } catch (err) {
+      console.error('❌ Error checking for scan:', err);
+    }
   }
 }

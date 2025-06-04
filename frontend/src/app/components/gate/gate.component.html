@@ -7,9 +7,26 @@
   </header>
 
   <div class="content-wrapper">
+    <!-- ✅ Scanned Employee Popup -->
+    <div *ngIf="lastScannedEmployee" class="scan-popup">
+      <div class="popup-content">
+        <img *ngIf="lastScannedEmployee.photo_url" 
+             [src]="lastScannedEmployee.photo_url" 
+             alt="Poza angajat" 
+             class="popup-photo"
+             (error)="onImageError($event)" />
+        <div class="popup-info">
+          <h3>{{ lastScannedEmployee.name }}</h3>
+          <p><strong>Badge:</strong> {{ lastScannedEmployee.badge_number }}</p>
+          <p><strong>Scanat la:</strong> {{ lastScannedEmployee.timestamp | date: 'HH:mm:ss' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ Status panel with gate -->
     <div class="status-panel">
       <h1 class="clock">{{ currentTime }}</h1>
-      
+
       <div class="gate-animation-container">
         <div class="gate" [ngClass]="{
           'gate-closed': gateStatus === 'închis',
@@ -30,6 +47,7 @@
       </button>
     </div>
 
+    <!-- ✅ Requests Panel -->
     <div class="requests-panel">
       <h2>
         <i class="fas fa-clipboard-list"></i>
@@ -38,26 +56,23 @@
       </h2>
 
       <div *ngIf="loading" class="loading">
-        <i class="fas fa-circle-notch fa-spin"></i>
-        Se încarcă...
+        <i class="fas fa-circle-notch fa-spin"></i> Se încarcă...
       </div>
-      
+
       <div *ngIf="error" class="error">
-        <i class="fas fa-exclamation-triangle"></i>
-        {{ error }}
+        <i class="fas fa-exclamation-triangle"></i> {{ error }}
         <button (click)="loadPendingLogs()" class="retry-btn">Reîncearcă</button>
       </div>
-      
+
       <div *ngIf="!loading && !error && pendingLogs.length === 0" class="empty">
-        <i class="fas fa-check-circle"></i>
-        Nu există solicitări în așteptare
+        <i class="fas fa-check-circle"></i> Nu există solicitări în așteptare
       </div>
 
       <div *ngFor="let log of pendingLogs; trackBy: trackByLogId" class="request-card">
         <div class="request-header">
-          <img *ngIf="log.photo_url" 
-               [src]="log.photo_url" 
-               alt="Fotografie angajat" 
+          <img *ngIf="log.photo_url"
+               [src]="log.photo_url"
+               alt="Fotografie angajat"
                class="employee-photo"
                (error)="onImageError($event)">
           <div *ngIf="!log.photo_url" class="employee-placeholder">
@@ -66,7 +81,7 @@
           <div class="request-info">
             <p><strong>Nume:</strong> {{ log.name }}</p>
             <p><strong>Cod Bluetooth:</strong> {{ log.bluetooth_code }}</p>
-            <p><strong>Direcție:</strong> 
+            <p><strong>Direcție:</strong>
               <span class="direction" [ngClass]="log.direction">
                 {{ log.direction === 'entry' ? 'Intrare' : 'Ieșire' }}
               </span>
@@ -74,11 +89,11 @@
             <p><strong>Program permis:</strong> {{ log.allowed_schedule }}</p>
             <p><strong>Oră solicitare:</strong> {{ log.timestamp | date: 'HH:mm:ss' }}</p>
             <p class="schedule-warning">
-              <i class="fas fa-clock"></i>
-              Solicitare în afara programului: {{ log.allowed_schedule }}
+              <i class="fas fa-clock"></i> Solicitare în afara programului: {{ log.allowed_schedule }}
             </p>
           </div>
         </div>
+
         <div class="actions">
           <button class="approve" (click)="handleApproval(log.id, true)">
             <i class="fas fa-check"></i> Aprobă

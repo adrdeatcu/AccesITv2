@@ -16,6 +16,8 @@ const supabase = createClient(
   process.env.SUPABASE_KEY
 );
 
+let latestScannedEmployee = null;
+
 // ✅ TEMPORARY FLAG used by ESP32 to open gate
 let temporaryFreeAccess = false;
 
@@ -75,7 +77,6 @@ app.post('/verify-access-from-mobile', async (req, res) => {
   console.log('📡 Request body:', req.body);
 
   const { encrypted_data } = req.body;
-  
   if (!encrypted_data) {
     return res.status(400).json({
       encrypted_response: encrypt(JSON.stringify({
@@ -85,7 +86,6 @@ app.post('/verify-access-from-mobile', async (req, res) => {
     });
   }
 
-  // Decrypt the incoming data
   const decryptedData = decrypt(encrypted_data);
   if (!decryptedData) {
     return res.status(400).json({
@@ -120,63 +120,6 @@ app.post('/verify-access-from-mobile', async (req, res) => {
     });
   }
 
-  // Handle exit request
-  if (direction === 'exit') {
-    const { data: employee, error } = await supabase
-      .from('employees')
-      .select('*')
-      .eq('bluetooth_code', ble_code)
-      .single();
-
-    if (error || !employee) {
-      console.log('❌ Employee not found for exit:', ble_code);
-      return res.json({
-        encrypted_response: encrypt(JSON.stringify({
-          can_exit: false,
-          message: 'Employee not found'
-        }))
-      });
-    }
-
-    const now = new Date();
-    const { error: logError } = await supabase
-      .from('access_logs')
-      .insert([{
-        employee_id: employee.id,
-        bluetooth_code: ble_code,
-        direction: 'exit',
-        is_visitor: false,
-        timestamp: now,
-        authorized: true,
-        needs_approval: false,
-        validated_by: validatedById
-      }]);
-
-    if (logError) {
-      console.error('❌ Failed to insert exit log:', logError);
-      return res.status(500).json({
-        encrypted_response: encrypt(JSON.stringify({
-          can_exit: false,
-          message: 'Database error'
-        }))
-      });
-    }
-
-    // Trigger gate for exit
-    temporaryFreeAccess = true;
-    console.log(`🚀 temporaryFreeAccess set to TRUE for ESP32 on EXIT`);
-    console.log(`✅ EXIT granted for: ${employee.name}`);
-
-    return res.json({
-      encrypted_response: encrypt(JSON.stringify({
-        can_exit: true,
-        message: `La revedere, ${employee.name}!`,
-        employee_name: employee.name
-      }))
-    });
-  }
-
-  // Handle entry request
   const { data: employee, error } = await supabase
     .from('employees')
     .select('*')
@@ -184,17 +127,17 @@ app.post('/verify-access-from-mobile', async (req, res) => {
     .single();
 
   if (error || !employee) {
-    console.log('❌ Employee not found for code:', ble_code);
+    console.log(`❌ Employee not found for ${direction}:`, ble_code);
     return res.json({
       encrypted_response: encrypt(JSON.stringify({
         granted: false,
-        message: 'denied'
+        message: 'Employee not found'
       }))
     });
   }
 
   const now = new Date();
-  const accessDirection = 'entry';
+  const accessDirection = direction === 'exit' ? 'exit' : 'entry';
 
   const { error: logError } = await supabase
     .from('access_logs')
@@ -206,23 +149,30 @@ app.post('/verify-access-from-mobile', async (req, res) => {
       timestamp: now,
       authorized: true,
       needs_approval: false,
-      validated_by: validatedById,
+      validated_by: validatedById
     }]);
 
   if (logError) {
-    console.error('❌ Failed to insert log:', logError);
+    console.error(`❌ Failed to insert ${direction} log:`, logError);
     return res.status(500).json({
       encrypted_response: encrypt(JSON.stringify({
         granted: false,
-        message: 'internal_error'
+        message: 'Database error'
       }))
     });
   }
 
-  // ✅ ESP32 Trigger for entry
+  // ✅ Trigger gate and update scanned employee
   temporaryFreeAccess = true;
-  console.log(`🚀 temporaryFreeAccess set to TRUE for ESP32 on ${accessDirection}`);
-  console.log(`✅ ${accessDirection.toUpperCase()} granted for: ${employee.name} (${type || 'pedestrian'})`);
+  latestScannedEmployee = {
+    name: employee.name,
+    photo_url: employee.photo_url,
+    badge_number: employee.badge_number, // ✅ You must ensure this field exists
+    timestamp: now.toISOString()
+  };
+
+  console.log(`🚀 temporaryFreeAccess set to TRUE for ESP32 on ${direction}`);
+  console.log(`✅ ${direction.toUpperCase()} granted for: ${employee.name}`);
 
   return res.json({
     encrypted_response: encrypt(JSON.stringify({
@@ -235,6 +185,7 @@ app.post('/verify-access-from-mobile', async (req, res) => {
 });
 
 
+
 // ✅ ESP32 access polling endpoint
 app.get('/api/free-access', (req, res) => {
   if (temporaryFreeAccess) {
@@ -245,6 +196,18 @@ app.get('/api/free-access', (req, res) => {
     return res.json({ access: false });
   }
 });
+
+// ✅ New route: Provide last scanned employee
+app.get('/api/last-scan', (req, res) => {
+  if (latestScannedEmployee) {
+    const response = { found: true, employee: latestScannedEmployee };
+    latestScannedEmployee = null; // Reset after sending
+    return res.json(response);
+  } else {
+    return res.json({ found: false });
+  }
+});
+
 
 // ✅ Existing access-event logic
 app.post('/access-event', async (req, res) => {
