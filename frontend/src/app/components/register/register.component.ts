@@ -35,11 +35,11 @@ export class RegisterComponent {
       name: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      role: ['employee', Validators.required],
+      role: ['', Validators.required], // Add this line
       badge_number: ['', Validators.required],
       bluetooth_code: ['', Validators.required],
-      allowed_schedule: [this.scheduleOptions[0], Validators.required],
-      division: [1, Validators.required], // Default to 1 (IT)
+      allowed_schedule: ['08:00-16:00', Validators.required],
+      division: ['', Validators.required],
       photo_url: [''],
       access_enabled: [true]
     });

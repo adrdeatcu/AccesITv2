@@ -440,6 +440,17 @@ app.post('/admin/register-user', async (req, res) => {
     });
   }
   
+  // Add this validation after the requiredFields check
+
+  // Validate role
+  const validRoles = ['admin', 'portar', 'normal'];
+  if (!validRoles.includes(userData.role)) {
+    return res.status(400).json({ 
+      success: false, 
+      error: `Invalid role. Must be one of: ${validRoles.join(', ')}` 
+    });
+  }
+  
   try {
     // First create the auth user (for all users)
     const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
@@ -640,7 +651,7 @@ app.post('/api/add-visitor', async (req, res) => {
   }
 });
 
-// Update the delete-user endpoint to handle foreign key constraints
+// Update the delete-user endpoint to handle the granted_by foreign key constraint
 
 // ✅ Admin: Delete user from all tables
 app.delete('/admin/delete-user/:id', async (req, res) => {
@@ -651,7 +662,7 @@ app.delete('/admin/delete-user/:id', async (req, res) => {
   }
   
   try {
-    // Step 0: Delete from access_logs table first to remove the foreign key constraint
+    // Step 0: Delete from access_logs table first to remove that foreign key constraint
     const { error: accessLogsError } = await supabase
       .from('access_logs')
       .delete()
@@ -660,6 +671,18 @@ app.delete('/admin/delete-user/:id', async (req, res) => {
     if (accessLogsError) {
       console.error('❌ Failed to delete from access_logs table:', accessLogsError);
       return res.status(500).json({ success: false, error: accessLogsError.message });
+    }
+    
+    // Step 0.5: Update any employees that reference this user as granted_by
+    // Set granted_by to NULL for any employee that references this user
+    const { error: updateGrantedByError } = await supabase
+      .from('employees')
+      .update({ granted_by: null })
+      .eq('granted_by', id);
+    
+    if (updateGrantedByError) {
+      console.error('❌ Failed to update granted_by references:', updateGrantedByError);
+      return res.status(500).json({ success: false, error: updateGrantedByError.message });
     }
     
     // Step 1: Delete from employees table

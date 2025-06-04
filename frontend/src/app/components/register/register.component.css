@@ -122,6 +122,27 @@
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+select.form-control {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: white;
+  transition: border-color 0.15s ease-in-out;
+  appearance: auto; /* Allow browser's native select styling */
+}
+
+select.form-control:focus {
+  border-color: #3498db;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+select.form-control option {
+  padding: 10px;
+}
+
 .checkbox-group {
   flex-direction: row;
   align-items: center;

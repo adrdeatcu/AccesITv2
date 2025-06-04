@@ -76,6 +76,26 @@
             </div>
           </div>
         </div>
+
+        <!-- Add this right after the name input field or wherever appropriate in your form -->
+        <div class="form-group">
+          <label for="role">Rol Utilizator</label>
+          <select 
+            id="role" 
+            formControlName="role" 
+            class="form-control"
+            required>
+            <option value="" disabled selected>Selectați un rol</option>
+            <option value="admin">Administrator</option>
+            <option value="portar">Portar</option>
+            <option value="normal">Utilizator Normal</option>
+          </select>
+          <div 
+            *ngIf="registerForm.get('role')?.invalid && registerForm.get('role')?.touched" 
+            class="error-message">
+            Rolul utilizatorului este obligatoriu
+          </div>
+        </div>
       </div>
 
       <div class="form-section">
