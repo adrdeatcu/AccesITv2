@@ -377,6 +377,21 @@ app.get('/admin/employees', async (req, res) => {
   return res.json({ success: true, employees: data });
 });
 
+// ✅ Admin: Get all visitors
+app.get('/admin/visitors', async (req, res) => {
+  const { data, error } = await supabase
+    .from('visitors')
+    .select('*')
+    .order('access_start', { ascending: false });
+
+  if (error) {
+    console.error('❌ Failed to fetch visitors:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+
+  return res.json({ success: true, visitors: data });
+});
+
 // ✅ Manual gate trigger from frontend
 app.post('/api/manual-open', (req, res) => {
   temporaryFreeAccess = true;
@@ -531,6 +546,36 @@ app.delete('/admin/delete-employee/:id', async (req, res) => {
     return res.json({ success: true });
   } catch (error) {
     console.error('❌ Error in user deletion:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Add this endpoint to your Express app
+
+// ✅ Admin: Delete visitor
+app.delete('/admin/visitors/:id', async (req, res) => {
+  const { id } = req.params;
+  
+  if (!id) {
+    return res.status(400).json({ success: false, error: 'Visitor ID is required' });
+  }
+  
+  try {
+    // Delete the visitor record
+    const { error } = await supabase
+      .from('visitors')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('❌ Failed to delete visitor:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+    
+    console.log('✅ Successfully deleted visitor with ID:', id);
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Error in visitor deletion:', error);
     return res.status(500).json({ success: false, error: error.message });
   }
 });

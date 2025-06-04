@@ -1,0 +1,82 @@
+<div class="visitors-list">
+  <button class="back-btn" routerLink="/admin">
+    ⬅️ Înapoi la Panoul Administrator
+  </button>
+  
+  <h2>📋 Lista Vizitatorilor</h2>
+  
+  <div *ngIf="visitors.length === 0 && !isLoading && !error">
+    <p>Nu există vizitatori înregistrați.</p>
+  </div>
+  
+  <div *ngIf="isLoading" class="loading-indicator">
+    <div class="spinner"></div>
+    <p>Se încarcă vizitatorii...</p>
+  </div>
+  
+  <div *ngIf="error" class="error-message">
+    <p>{{ error }}</p>
+    <button (click)="loadVisitors()">Încearcă din nou</button>
+  </div>
+  
+  <table *ngIf="visitors.length > 0" class="visitors-table">
+    <thead>
+      <tr>
+        <th>Nume</th>
+        <th>Nr. Înmatriculare</th>
+        <th>Motiv</th>
+        <th>Cod Acces</th>
+        <th>Început Valabilitate</th>
+        <th>Sfârșit Valabilitate</th>
+        <th>Status</th>
+        <!-- Add a new column for actions in the table header -->
+        <th>Acțiuni</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let visitor of visitors">
+        <td>{{ visitor.name }}</td>
+        <td>{{ visitor.license_plate }}</td>
+        <td>{{ visitor.reason }}</td>
+        <td class="code-cell">{{ visitor.ble_temp_code }}</td>
+        <td>{{ visitor.access_start | date:'dd.MM.yyyy HH:mm' }}</td>
+        <td>{{ visitor.access_end | date:'dd.MM.yyyy HH:mm' }}</td>
+        <td>
+          <span class="status" [ngClass]="{
+            'active': isActive(visitor.access_start, visitor.access_end),
+            'expired': isExpired(visitor.access_end),
+            'upcoming': isUpcoming(visitor.access_start)
+          }">
+            {{ getStatusText(visitor.access_start, visitor.access_end) }}
+          </span>
+        </td>
+        <!-- Add inside the table row, after the status column -->
+        <td class="actions-cell">
+          <button 
+            class="delete-btn" 
+            (click)="confirmDelete(visitor)"
+            [disabled]="isDeleting === visitor.id">
+            <i class="fas fa-trash"></i>
+            <span *ngIf="isDeleting === visitor.id" class="spinner-sm"></span>
+            Șterge
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <!-- Confirmation Modal -->
+  <div *ngIf="visitorToDelete" class="delete-modal">
+    <div class="modal-content">
+      <h3>Confirmare ștergere</h3>
+      <p>Ești sigur că vrei să ștergi vizitatorul <strong>{{ visitorToDelete.name }}</strong>?</p>
+      <p class="warning">Această acțiune nu poate fi anulată!</p>
+      <div class="modal-actions">
+        <button class="cancel-btn" (click)="visitorToDelete = null">Anulează</button>
+        <button class="confirm-btn" (click)="deleteVisitor(visitorToDelete.id)">
+          Confirmă Ștergerea
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

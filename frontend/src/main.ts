@@ -12,6 +12,7 @@ import { AccessLogListComponent } from './app/components/access-log-list/access-
 import { EmployeeListComponent } from './app/components/employee-list/employee-list.component';
 import { RegisterComponent } from './app/components/register/register.component'; // Import RegisterComponent
 import { AddVisitorComponent } from './app/components/add-visitor/add-visitor.component'; // Import AddVisitorComponent
+import { VisitorsListComponent } from './app/components/visitors-list/visitors-list.component'; // Import VisitorsListComponent
 
 import { AuthGuard } from './app/guards/auth.guard';
 import { RoleGuard } from './app/guards/role.guard';
@@ -53,6 +54,12 @@ const routes: Route[] = [
     component: AddVisitorComponent,
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['portar'] }
+  },
+  { 
+    path: 'admin/visitors', 
+    component: VisitorsListComponent,
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['admin'] }
   },
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: '**', redirectTo: 'login' }
