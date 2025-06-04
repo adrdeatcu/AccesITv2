@@ -38,28 +38,28 @@ function encrypt(text) {
 // Fixed AES Decryption function
 function decrypt(encryptedData) {
   try {
-    console.log('🔐 Encrypted data received:', encryptedData);
+    console.log('Encrypted data received:', encryptedData);
     
     const textParts = encryptedData.split(':');
     if (textParts.length !== 2) {
-      console.error('❌ Invalid encrypted data format');
+      console.error('Invalid encrypted data format');
       return null;
     }
     
     const iv = Buffer.from(textParts[0], 'base64');
     const encryptedText = textParts[1];
     
-    console.log('🔑 IV length:', iv.length);
-    console.log('🔑 Encrypted text length:', encryptedText.length);
+    console.log('IV length:', iv.length);
+    console.log('Encrypted text length:', encryptedText.length);
     
     const decipher = crypto.createDecipheriv(ALGORITHM, keyBuffer, iv);
     let decrypted = decipher.update(encryptedText, 'base64', 'utf8');
     decrypted += decipher.final('utf8');
     
-    console.log('✅ Decryption successful');
+    console.log('Decryption successful');
     return decrypted;
   } catch (error) {
-    console.error('❌ Decryption error:', error);
+    console.error('Decryption error:', error);
     return null;
   }
 }
