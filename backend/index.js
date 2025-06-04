@@ -384,3 +384,105 @@ app.post('/api/manual-open', (req, res) => {
   return res.json({ success: true, message: 'Gate open triggered manually' });
 });
 
+// Update the register-user endpoint to also insert into employees table
+
+// ✅ Register new user
+app.post('/admin/register-user', async (req, res) => {
+  const userData = req.body;
+  
+  // Validate required fields for both users and employees
+  const requiredFields = [
+    'name', 
+    'email', 
+    'password', 
+    'role', 
+    'badge_number', 
+    'bluetooth_code', 
+    'allowed_schedule',
+    'division' // Added division as a required field
+  ];
+  const missingFields = requiredFields.filter(field => !userData[field]);
+  
+  if (missingFields.length > 0) {
+    return res.status(400).json({ 
+      success: false, 
+      error: `Missing required fields: ${missingFields.join(', ')}` 
+    });
+  }
+  
+  try {
+    // First create the auth user (for all users)
+    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+      email: userData.email,
+      password: userData.password,
+      email_confirm: true,
+      user_metadata: {
+        name: userData.name,
+        role: userData.role
+      }
+    });
+    
+    if (authError) {
+      console.error('❌ Failed to create auth user:', authError);
+      return res.status(500).json({ success: false, error: authError.message });
+    }
+    
+    // Use the auth user ID for the users table
+    const userRecord = {
+      id: authUser.user.id,  // Use the UUID from Supabase Auth
+      name: userData.name,
+      email: userData.email,
+      password: userData.password,
+      role: userData.role
+    };
+    
+    const { data: newUser, error: userError } = await supabase
+      .from('users')
+      .insert([userRecord])
+      .select();
+    
+    if (userError) {
+      console.error('❌ Failed to create user record:', userError);
+      
+      // Try to clean up the auth user if the users table insert fails
+      await supabase.auth.admin.deleteUser(authUser.user.id);
+      
+      return res.status(500).json({ success: false, error: userError.message });
+    }
+    
+    // Now add to employees table as well
+    const employeeRecord = {
+      id: authUser.user.id, // Same ID across all tables
+      name: userData.name,
+      badge_number: userData.badge_number,
+      bluetooth_code: userData.bluetooth_code,
+      allowed_schedule: userData.allowed_schedule,
+      photo_url: userData.photo_url || null,
+      access_enabled: userData.access_enabled || true,
+      division_id: userData.division // Fixed spelling from "divison_id" to "division_id"
+    };
+    
+    const { error: employeeError } = await supabase
+      .from('employees')
+      .insert([employeeRecord]);
+    
+    if (employeeError) {
+      console.error('❌ Failed to create employee record:', employeeError);
+      
+      // Try to clean up if employees table insert fails
+      // Delete from users table
+      await supabase.from('users').delete().eq('id', authUser.user.id);
+      // Delete auth user
+      await supabase.auth.admin.deleteUser(authUser.user.id);
+      
+      return res.status(500).json({ success: false, error: employeeError.message });
+    }
+    
+    console.log('✅ User & Employee records created for:', userData.name, 'with ID:', authUser.user.id);
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Error in user registration:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
