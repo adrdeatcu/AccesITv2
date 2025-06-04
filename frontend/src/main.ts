@@ -13,6 +13,7 @@ import { EmployeeListComponent } from './app/components/employee-list/employee-l
 import { RegisterComponent } from './app/components/register/register.component'; // Import RegisterComponent
 import { AddVisitorComponent } from './app/components/add-visitor/add-visitor.component'; // Import AddVisitorComponent
 import { VisitorsListComponent } from './app/components/visitors-list/visitors-list.component'; // Import VisitorsListComponent
+import { UserListComponent } from './app/components/user-list/user-list.component'; // Import UserListComponent
 
 import { AuthGuard } from './app/guards/auth.guard';
 import { RoleGuard } from './app/guards/role.guard';
@@ -58,6 +59,12 @@ const routes: Route[] = [
   { 
     path: 'admin/visitors', 
     component: VisitorsListComponent,
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['admin'] }
+  },
+  { 
+    path: 'admin/manage-users', 
+    component: UserListComponent,
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['admin'] }
   },

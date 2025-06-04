@@ -392,6 +392,21 @@ app.get('/admin/visitors', async (req, res) => {
   return res.json({ success: true, visitors: data });
 });
 
+// ✅ Admin: Get all users
+app.get('/admin/users', async (req, res) => {
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('❌ Failed to fetch users:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+
+  return res.json({ success: true, users: data });
+});
+
 // ✅ Manual gate trigger from frontend
 app.post('/api/manual-open', (req, res) => {
   temporaryFreeAccess = true;
@@ -621,6 +636,66 @@ app.post('/api/add-visitor', async (req, res) => {
     return res.json({ success: true, visitor });
   } catch (error) {
     console.error('❌ Error in visitor registration:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Update the delete-user endpoint to handle foreign key constraints
+
+// ✅ Admin: Delete user from all tables
+app.delete('/admin/delete-user/:id', async (req, res) => {
+  const { id } = req.params;
+  
+  if (!id) {
+    return res.status(400).json({ success: false, error: 'User ID is required' });
+  }
+  
+  try {
+    // Step 0: Delete from access_logs table first to remove the foreign key constraint
+    const { error: accessLogsError } = await supabase
+      .from('access_logs')
+      .delete()
+      .eq('employee_id', id);
+    
+    if (accessLogsError) {
+      console.error('❌ Failed to delete from access_logs table:', accessLogsError);
+      return res.status(500).json({ success: false, error: accessLogsError.message });
+    }
+    
+    // Step 1: Delete from employees table
+    const { error: employeeError } = await supabase
+      .from('employees')
+      .delete()
+      .eq('id', id);
+    
+    if (employeeError) {
+      console.error('❌ Failed to delete from employees table:', employeeError);
+      // Continue with other deletions even if this fails
+    }
+    
+    // Step 2: Delete from users table
+    const { error: userError } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', id);
+    
+    if (userError) {
+      console.error('❌ Failed to delete from users table:', userError);
+      return res.status(500).json({ success: false, error: userError.message });
+    }
+    
+    // Step 3: Delete from Supabase auth
+    const { error: authError } = await supabase.auth.admin.deleteUser(id);
+    
+    if (authError) {
+      console.error('❌ Failed to delete from auth:', authError);
+      // This is not a critical error since we've already deleted from the main tables
+    }
+    
+    console.log('✅ Successfully deleted user with ID:', id);
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Error in user deletion:', error);
     return res.status(500).json({ success: false, error: error.message });
   }
 });

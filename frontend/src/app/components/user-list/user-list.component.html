@@ -1,0 +1,70 @@
+<div class="users-list">
+  <button class="back-btn" routerLink="/admin">
+    ⬅️ Înapoi la Panoul Administrator
+  </button>
+  
+  <h2>👥 Lista Utilizatorilor</h2>
+  
+  <div *ngIf="users.length === 0 && !isLoading && !error">
+    <p>Nu există utilizatori înregistrați.</p>
+  </div>
+  
+  <div *ngIf="isLoading" class="loading-indicator">
+    <div class="spinner"></div>
+    <p>Se încarcă utilizatorii...</p>
+  </div>
+  
+  <div *ngIf="error" class="error-message">
+    <p>{{ error }}</p>
+    <button (click)="loadUsers()">Încearcă din nou</button>
+  </div>
+  
+  <table *ngIf="users.length > 0" class="users-table">
+    <thead>
+      <tr>
+        <th>Nume</th>
+        <th>Email</th>
+        <th>Rol</th>
+        <th>ID</th>
+        <th>Acțiuni</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let user of users">
+        <td>{{ user.name }}</td>
+        <td>{{ user.email }}</td>
+        <td>
+          <span class="role-badge" [ngClass]="user.role">
+            {{ user.role === 'admin' ? 'Administrator' : 
+               user.role === 'portar' ? 'Portar' : 'Angajat' }}
+          </span>
+        </td>
+        <td class="id-cell">{{ user.id }}</td>
+        <td class="actions-cell">
+          <button 
+            class="delete-btn" 
+            (click)="confirmDelete(user)"
+            [disabled]="isDeleting === user.id">
+            <i class="fas fa-trash"></i>
+            <span *ngIf="isDeleting === user.id" class="spinner-sm"></span>
+            Șterge
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <div *ngIf="userToDelete" class="delete-modal">
+    <div class="modal-content">
+      <h3>Confirmare ștergere</h3>
+      <p>Ești sigur că vrei să ștergi utilizatorul <strong>{{ userToDelete.name }}</strong>?</p>
+      <p class="warning">Această acțiune va șterge utilizatorul din toate tabelele (utilizatori, angajați și autentificare) și nu poate fi anulată!</p>
+      <div class="modal-actions">
+        <button class="cancel-btn" (click)="userToDelete = null">Anulează</button>
+        <button class="confirm-btn" (click)="deleteUser(userToDelete.id)">
+          Confirmă Ștergerea
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
