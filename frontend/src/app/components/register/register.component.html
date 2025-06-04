@@ -1,0 +1,132 @@
+<div class="register-container">
+  <div class="register-card">
+    <div class="register-header">
+      <button (click)="navigateBack()" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <h1>Înregistrare Utilizator Nou</h1>
+    </div>
+
+    <!-- Success Message with action buttons -->
+    <div *ngIf="success" class="success-message-card">
+      <div class="success-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h2>{{ success }}</h2>
+      <p>Utilizatorul a fost creat cu succes și adăugat în baza de date.</p>
+      <div class="success-actions">
+        <button (click)="registerForm.reset({
+          role: 'employee',
+          division: 1,
+          allowed_schedule: scheduleOptions[0],
+          access_enabled: true
+        }); success = ''" class="new-user-btn">
+          <i class="fas fa-plus"></i> Adaugă alt utilizator
+        </button>
+        <button (click)="navigateBack()" class="back-to-admin-btn">
+          <i class="fas fa-arrow-left"></i> Înapoi la Admin
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="error" class="error-message">
+      <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
+
+    <!-- Only show the form if we're not displaying a success message -->
+    <form *ngIf="!success" [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+      <div class="form-section">
+        <h2>Informații Principale</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Nume Complet</label>
+            <input type="text" id="name" formControlName="name" placeholder="ex: Ion Popescu">
+            <div class="error-hint" *ngIf="registerForm.get('name')?.touched && registerForm.get('name')?.invalid">
+              Numele este obligatoriu (minim 3 caractere)
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" formControlName="email" placeholder="ex: ion.popescu@companie.ro">
+            <div class="error-hint" *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.invalid">
+              Adresa de email trebuie să fie validă
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="password">Parolă</label>
+            <input type="password" id="password" formControlName="password">
+            <div class="error-hint" *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.invalid">
+              Parola trebuie să aibă minim 6 caractere
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="division">Divizie/Departament</label>
+            <select id="division" formControlName="division">
+              <option *ngFor="let division of divisionOptions" [value]="division.id">
+                {{ division.name }}
+              </option>
+            </select>
+            <div class="error-hint" *ngIf="registerForm.get('division')?.touched && registerForm.get('division')?.invalid">
+              Divizia este obligatorie
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Date Acces</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="badge_number">Număr Badge</label>
+            <input type="text" id="badge_number" formControlName="badge_number" placeholder="ex: B12345">
+            <div class="error-hint" *ngIf="registerForm.get('badge_number')?.touched && registerForm.get('badge_number')?.invalid">
+              Numărul de badge este obligatoriu
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="bluetooth_code">Cod Bluetooth</label>
+            <input type="text" id="bluetooth_code" formControlName="bluetooth_code" placeholder="ex: BLE-123456">
+            <div class="error-hint" *ngIf="registerForm.get('bluetooth_code')?.touched && registerForm.get('bluetooth_code')?.invalid">
+              Codul bluetooth este obligatoriu
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="allowed_schedule">Program Permis</label>
+            <select id="allowed_schedule" formControlName="allowed_schedule">
+              <option *ngFor="let schedule of scheduleOptions" [value]="schedule">{{ schedule }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="photo_url">URL Fotografie (opțional)</label>
+            <input type="text" id="photo_url" formControlName="photo_url" placeholder="ex: https://example.com/photo.jpg">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group checkbox-group">
+            <input type="checkbox" id="access_enabled" formControlName="access_enabled">
+            <label for="access_enabled">Acces Activat</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" (click)="navigateBack()" class="cancel-btn">Anulează</button>
+        <button type="submit" [disabled]="isSubmitting" class="submit-btn">
+          <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+          <span *ngIf="!isSubmitting">Înregistrează</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
