@@ -168,7 +168,8 @@ app.post('/verify-access-from-mobile', async (req, res) => {
     name: employee.name,
     photo_url: employee.photo_url,
     badge_number: employee.badge_number, // ✅ You must ensure this field exists
-    timestamp: now.toISOString()
+    timestamp: now.toISOString(),
+    direction: direction
   };
 
   console.log(`🚀 temporaryFreeAccess set to TRUE for ESP32 on ${direction}`);

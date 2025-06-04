@@ -19,6 +19,9 @@
           <h3>{{ lastScannedEmployee.name }}</h3>
           <p><strong>Badge:</strong> {{ lastScannedEmployee.badge_number }}</p>
           <p><strong>Scanat la:</strong> {{ lastScannedEmployee.timestamp | date: 'HH:mm:ss' }}</p>
+          <p><strong>Direcție:</strong> 
+            {{ lastScannedEmployee.direction === 'exit' ? 'Ieșire' : 'Intrare' }}
+          </p>
         </div>
       </div>
     </div>
