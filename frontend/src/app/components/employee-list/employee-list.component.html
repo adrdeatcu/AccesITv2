@@ -1,1 +1,32 @@
-<p>employee-list works!</p>
+<div class="employee-list">
+    
+    <button class="back-btn" routerLink="/admin"> ⬅️ Înapoi la Panoul Administrator</button>
+  
+  
+  
+    <h2>📋 Lista Angajaților</h2>
+  
+    <div *ngIf="employees.length === 0">
+      <p>Nu există angajați înregistrați.</p>
+    </div>
+  
+    <table *ngIf="employees.length > 0" class="employee-table">
+      <thead>
+        <tr>
+          <th>Nume</th>
+          <th>Badge</th>
+          <th>Bluetooth</th>
+          <th>Interval Orar</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let employee of employees">
+          <td>{{ employee.name }}</td>
+          <td>{{ employee.badge_number }}</td>
+          <td>{{ employee.bluetooth_code }}</td>
+          <td>{{ employee.allowed_schedule }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
