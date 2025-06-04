@@ -385,6 +385,33 @@
   flex-wrap: wrap;
 }
 
+/* Replace the existing visitor-btn styles with these */
+
+.visitor-btn {
+  background-color: #1e88e5; /* Solid color instead of gradient */
+  border: none;
+  color: white;
+  padding: 1rem 2rem; /* Match padding */
+  border-radius: 12px; /* Match border-radius */
+  font-size: 1.1rem; /* Match font size */
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%; /* Match width */
+  max-width: 250px; /* Match max-width */
+  box-shadow: 0 4px 6px rgba(30, 136, 229, 0.2); /* Match shadow */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.visitor-btn:hover {
+  background-color: #1976d2; /* Match hover color */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(30, 136, 229, 0.3); /* Match hover shadow */
+}
+
 /* Add media queries for responsive design */
 @media screen and (max-width: 1024px) {
     .content-wrapper {
@@ -506,6 +533,21 @@
     background-color: #ffebee;
     color: #d32f2f;
   }
-  
-  
-  
+
+  .gate-controls {
+    display: flex;
+    flex-direction: column; /* Stack buttons vertically */
+    gap: 1rem;
+    justify-content: center;
+    align-items: center; /* Center buttons horizontally */
+    margin-top: 1.5rem;
+}
+
+/* Add media query for larger screens */
+@media screen and (min-width: 768px) {
+  .gate-controls {
+    flex-direction: column; /* Keep stacked for consistent look */
+  }
+}
+
+

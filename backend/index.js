@@ -535,3 +535,48 @@ app.delete('/admin/delete-employee/:id', async (req, res) => {
   }
 });
 
+// Add this endpoint to your Express app
+
+// ✅ Add visitor
+app.post('/api/add-visitor', async (req, res) => {
+  const visitorData = req.body;
+  
+  // Validate required fields
+  const requiredFields = ['name', 'license_plate', 'reason', 'ble_temp_code', 'access_start', 'access_end'];
+  const missingFields = requiredFields.filter(field => !visitorData[field]);
+  
+  if (missingFields.length > 0) {
+    return res.status(400).json({ 
+      success: false, 
+      error: `Missing required fields: ${missingFields.join(', ')}` 
+    });
+  }
+  
+  try {
+    // Insert into visitors table
+    const { data: visitor, error } = await supabase
+      .from('visitors')
+      .insert([{
+        name: visitorData.name,
+        license_plate: visitorData.license_plate,
+        reason: visitorData.reason,
+        ble_temp_code: visitorData.ble_temp_code,
+        access_start: visitorData.access_start,
+        access_end: visitorData.access_end
+      }])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('❌ Failed to create visitor record:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+    
+    console.log('✅ Visitor created:', visitorData.name, 'with BLE code:', visitorData.ble_temp_code);
+    return res.json({ success: true, visitor });
+  } catch (error) {
+    console.error('❌ Error in visitor registration:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+

@@ -56,9 +56,15 @@
         </div>
       </div>
 
-      <button class="open-btn" (click)="openGate()" [disabled]="gateStatus !== 'închis'">
-        <i class="fas fa-door-open"></i> Deschidere Manuală
-      </button>
+      <div class="gate-controls">
+        <button class="open-btn" (click)="openGate()" [disabled]="gateStatus !== 'închis'">
+          <i class="fas fa-door-open"></i> Deschidere Manuală
+        </button>
+        
+        <button class="visitor-btn" routerLink="/add-visitor">
+          <i class="fas fa-user-plus"></i> Adaugă Vizitator
+        </button>
+      </div>
     </div>
 
     <!-- ✅ Requests Panel -->

@@ -1,0 +1,88 @@
+<div class="visitor-container">
+  <div class="visitor-card">
+    <div class="visitor-header">
+      <button (click)="navigateBack()" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <h1>Înregistrare Vizitator</h1>
+    </div>
+
+    <div *ngIf="error" class="error-message">
+      <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
+
+    <div *ngIf="success" class="success-message">
+      <i class="fas fa-check-circle"></i> {{ success }}
+    </div>
+
+    <form [formGroup]="visitorForm" (ngSubmit)="onSubmit()" class="visitor-form">
+      <div class="form-section">
+        <h2>Informații Vizitator</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Nume Complet</label>
+            <input type="text" id="name" formControlName="name" placeholder="ex: Ion Popescu">
+            <div class="error-hint" *ngIf="visitorForm.get('name')?.touched && visitorForm.get('name')?.invalid">
+              Numele este obligatoriu (minim 3 caractere)
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="license_plate">Număr Înmatriculare</label>
+            <input type="text" id="license_plate" formControlName="license_plate" placeholder="ex: B123ABC">
+            <div class="error-hint" *ngIf="visitorForm.get('license_plate')?.touched && visitorForm.get('license_plate')?.invalid">
+              Numărul de înmatriculare este obligatoriu
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="reason">Motivul Vizitei</label>
+            <textarea id="reason" formControlName="reason" rows="2" placeholder="ex: Întâlnire cu departamentul IT"></textarea>
+            <div class="error-hint" *ngIf="visitorForm.get('reason')?.touched && visitorForm.get('reason')?.invalid">
+              Motivul vizitei este obligatoriu (minim 5 caractere)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Date Acces</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="ble_temp_code">Cod Bluetooth Temporar</label>
+            <input type="text" id="ble_temp_code" formControlName="ble_temp_code" readonly>
+            <div class="code-hint">Cod generat automat pentru acces</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="access_start">Început Valabilitate</label>
+            <input type="datetime-local" id="access_start" formControlName="access_start" [min]="minDate">
+            <div class="error-hint" *ngIf="visitorForm.get('access_start')?.touched && visitorForm.get('access_start')?.invalid">
+              Data și ora începerii sunt obligatorii
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="access_end">Sfârșit Valabilitate</label>
+            <input type="datetime-local" id="access_end" formControlName="access_end" [min]="minEndDate">
+            <div class="error-hint" *ngIf="visitorForm.get('access_end')?.touched && visitorForm.get('access_end')?.invalid">
+              Data și ora expirării sunt obligatorii
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" (click)="navigateBack()" class="cancel-btn">Anulează</button>
+        <button type="submit" [disabled]="isSubmitting || visitorForm.invalid" class="submit-btn">
+          <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+          <span *ngIf="!isSubmitting">Înregistrează Vizitator</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

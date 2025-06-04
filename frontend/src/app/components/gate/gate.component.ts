@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { Router } from '@angular/router';
 import { SupabaseService } from '../../services/supabase.service';
 import { Subscription } from 'rxjs';
@@ -20,7 +21,7 @@ interface AccessLog {
   standalone: true,
   templateUrl: './gate.component.html',
   styleUrls: ['./gate.component.css'],
-  imports: [CommonModule]
+  imports: [CommonModule, RouterModule]
 })
 export class GateComponent implements OnInit, OnDestroy {
   currentTime: string = '';

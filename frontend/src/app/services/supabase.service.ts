@@ -164,6 +164,29 @@ export class SupabaseService {
       return { success: false, error: error.message || 'Failed to delete employee' };
     }
   }
+
+  async addVisitor(visitorData: any): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch('http://localhost:3000/api/add-visitor', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(visitorData),
+      });
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to register visitor');
+      }
+      
+      return { success: true };
+    } catch (error: any) {
+      console.error('❌ Failed to register visitor:', error);
+      return { success: false, error: error.message || 'Failed to register visitor' };
+    }
+  }
 }
 
 
