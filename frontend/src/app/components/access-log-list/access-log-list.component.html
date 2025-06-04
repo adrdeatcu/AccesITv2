@@ -1,1 +1,45 @@
-<p>access-log-list works!</p>
+<div class="log-container">
+    <h2>📋 Jurnal Acces</h2>
+  
+    <button class="back-btn" routerLink="/admin">Înapoi</button>
+  
+    <div *ngIf="isLoading">Se încarcă datele...</div>
+    <div *ngIf="error">{{ error }}</div>
+    <div *ngIf="!isLoading && accessLogs.length === 0">Nu există înregistrări.</div>
+  
+    <table *ngIf="accessLogs.length > 0" class="access-log-table">
+      <thead>
+        <tr>
+          <th>Data/Ora</th>
+          <th>Direcție</th>
+          <th>Cod Bluetooth</th>
+          <th>Vizitator</th>
+          <th>Autorizat</th>
+          <th>Necesită Aprobare</th>
+          <th>Angajat</th>
+          <th>Program</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let log of accessLogs">
+          <td>{{ log.timestamp | date:'short' }}</td>
+          <td>{{ log.direction }}</td>
+          <td>{{ log.bluetooth_code }}</td>
+          <td>{{ log.is_visitor ? 'Da' : 'Nu' }}</td>
+          <td>
+            <span [ngClass]="{
+              'yes': log.authorized === true,
+              'no': log.authorized === false,
+              'pending': log.authorized === null
+            }">
+              {{ log.authorized === true ? 'Da' : (log.authorized === false ? 'Nu' : 'În așteptare') }}
+            </span>
+          </td>
+          <td>{{ log.needs_approval ? 'Da' : 'Nu' }}</td>
+          <td>{{ log.employees?.name || '—' }}</td>
+          <td>{{ log.employees?.allowed_schedule || '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
