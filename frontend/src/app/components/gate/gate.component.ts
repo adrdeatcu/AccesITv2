@@ -63,23 +63,29 @@ export class GateComponent implements OnInit, OnDestroy {
     this.currentTime = now.toLocaleTimeString('ro-RO', { hour12: false });
   }
 
-  openGate() {
+  async openGate() {
     if (this.gateStatus !== 'închis') return;
-    
+  
+    // 🔁 Backend call to trigger ESP flag
+    const success = await this.supabaseService.triggerManualGateOpen();
+    if (!success) {
+      alert('Eroare la deschiderea porții. Încearcă din nou.');
+      return;
+    }
+  
+    // ✅ Continue with the animation
     this.gateStatus = 'în curs de deschidere';
-    
     setTimeout(() => {
       this.gateStatus = 'deschis';
-      
       setTimeout(() => {
         this.gateStatus = 'în curs de închidere';
-        
         setTimeout(() => {
           this.gateStatus = 'închis';
         }, 2000);
       }, 3000);
     }, 2000);
   }
+  
 
   async loadPendingLogs() {
     this.loading = true;

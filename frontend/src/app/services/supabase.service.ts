@@ -106,6 +106,20 @@ export class SupabaseService {
       return [];
     }
   }
+
+  async triggerManualGateOpen(): Promise<boolean> {
+    try {
+      const res = await fetch('http://localhost:3000/api/manual-open', {
+        method: 'POST',
+      });
+      const result = await res.json();
+      return result.success;
+    } catch (error) {
+      console.error('❌ Failed to trigger manual gate open:', error);
+      return false;
+    }
+  }
+  
   
 }
 

@@ -412,3 +412,11 @@ app.get('/admin/employees', async (req, res) => {
 
   return res.json({ success: true, employees: data });
 });
+
+// ✅ Manual gate trigger from frontend
+app.post('/api/manual-open', (req, res) => {
+  temporaryFreeAccess = true;
+  console.log('🚨 Manual gate open requested by frontend');
+  return res.json({ success: true, message: 'Gate open triggered manually' });
+});
+
