@@ -19,8 +19,19 @@
           <h3>{{ lastScannedEmployee.name }}</h3>
           <p><strong>Badge:</strong> {{ lastScannedEmployee.badge_number }}</p>
           <p><strong>Scanat la:</strong> {{ lastScannedEmployee.timestamp | date: 'HH:mm:ss' }}</p>
-          <p><strong>Direcție:</strong> 
-            {{ lastScannedEmployee.direction === 'exit' ? 'Ieșire' : 'Intrare' }}
+          <p>
+            <strong>Direcție:</strong>
+            <span [ngClass]="{
+              'direction-label': true,
+              'entry': lastScannedEmployee.direction !== 'exit',
+              'exit': lastScannedEmployee.direction === 'exit'
+            }">
+              <i class="fas" [ngClass]="{
+                'fa-sign-in-alt': lastScannedEmployee.direction !== 'exit',
+                'fa-sign-out-alt': lastScannedEmployee.direction === 'exit'
+              }"></i>
+              {{ lastScannedEmployee.direction === 'exit' ? 'Ieșire' : 'Intrare' }}
+            </span>
           </p>
         </div>
       </div>
@@ -84,9 +95,18 @@
           <div class="request-info">
             <p><strong>Nume:</strong> {{ log.name }}</p>
             <p><strong>Cod Bluetooth:</strong> {{ log.bluetooth_code }}</p>
-            <p><strong>Direcție:</strong>
-              <span class="direction" [ngClass]="log.direction">
-                {{ log.direction === 'entry' ? 'Intrare' : 'Ieșire' }}
+            <p>
+              <strong>Direcție:</strong>
+              <span [ngClass]="{
+                'direction-label': true,
+                'entry': log.direction !== 'exit',
+                'exit': log.direction === 'exit'
+              }">
+                <i class="fas" [ngClass]="{
+                  'fa-sign-in-alt': log.direction !== 'exit',
+                  'fa-sign-out-alt': log.direction === 'exit'
+                }"></i>
+                {{ log.direction === 'exit' ? 'Ieșire' : 'Intrare' }}
               </span>
             </p>
             <p><strong>Program permis:</strong> {{ log.allowed_schedule }}</p>

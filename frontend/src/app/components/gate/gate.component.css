@@ -487,5 +487,25 @@
   .popup-info p {
     margin: 4px 0;
   }
+
+  .direction-label {
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .direction-label.entry {
+    background-color: #e3f2fd;
+    color: #1976d2;
+  }
+  
+  .direction-label.exit {
+    background-color: #ffebee;
+    color: #d32f2f;
+  }
+  
   
   
