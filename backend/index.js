@@ -486,3 +486,52 @@ app.post('/admin/register-user', async (req, res) => {
   }
 });
 
+// Add this endpoint to delete a user from all three tables
+
+// ✅ Delete employee from all tables
+app.delete('/admin/delete-employee/:id', async (req, res) => {
+  const { id } = req.params;
+  
+  if (!id) {
+    return res.status(400).json({ success: false, error: 'Employee ID is required' });
+  }
+  
+  try {
+    // Step 1: Delete from employees table
+    const { error: employeeError } = await supabase
+      .from('employees')
+      .delete()
+      .eq('id', id);
+    
+    if (employeeError) {
+      console.error('❌ Failed to delete from employees table:', employeeError);
+      return res.status(500).json({ success: false, error: employeeError.message });
+    }
+    
+    // Step 2: Delete from users table
+    const { error: userError } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', id);
+    
+    if (userError) {
+      console.error('❌ Failed to delete from users table:', userError);
+      // Continue to auth deletion even if users table deletion fails
+    }
+    
+    // Step 3: Delete from Supabase auth
+    const { error: authError } = await supabase.auth.admin.deleteUser(id);
+    
+    if (authError) {
+      console.error('❌ Failed to delete from auth:', authError);
+      // This is not a critical error since we've already deleted from the main tables
+    }
+    
+    console.log('✅ Successfully deleted user with ID:', id);
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Error in user deletion:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+

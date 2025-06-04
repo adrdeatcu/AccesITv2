@@ -2,14 +2,22 @@
     
     <button class="back-btn" routerLink="/admin"> ⬅️ Înapoi la Panoul Administrator</button>
   
-  
-  
     <h2>📋 Lista Angajaților</h2>
-  
+
     <div *ngIf="employees.length === 0">
       <p>Nu există angajați înregistrați.</p>
     </div>
-  
+
+    <div *ngIf="isLoading" class="loading-indicator">
+      <div class="spinner"></div>
+      <p>Se încarcă angajații...</p>
+    </div>
+
+    <div *ngIf="error" class="error-message">
+      <p>{{ error }}</p>
+      <button (click)="loadEmployees()">Încearcă din nou</button>
+    </div>
+
     <table *ngIf="employees.length > 0" class="employee-table">
       <thead>
         <tr>
@@ -17,6 +25,7 @@
           <th>Badge</th>
           <th>Bluetooth</th>
           <th>Interval Orar</th>
+          <th>Acțiuni</th>
         </tr>
       </thead>
       <tbody>
@@ -25,8 +34,32 @@
           <td>{{ employee.badge_number }}</td>
           <td>{{ employee.bluetooth_code }}</td>
           <td>{{ employee.allowed_schedule }}</td>
+          <td class="actions-cell">
+            <button 
+              class="delete-btn" 
+              (click)="confirmDelete(employee)"
+              [disabled]="isDeleting === employee.id">
+              <i class="fas fa-trash"></i>
+              <span *ngIf="isDeleting === employee.id" class="spinner-sm"></span>
+              Șterge
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
+
+    <!-- Confirmation Modal -->
+    <div *ngIf="employeeToDelete" class="delete-modal">
+      <div class="modal-content">
+        <h3>Confirmare ștergere</h3>
+        <p>Ești sigur că vrei să ștergi utilizatorul <strong>{{ employeeToDelete.name }}</strong>?</p>
+        <p class="warning">Această acțiune va șterge utilizatorul din toate tabelele și nu poate fi anulată!</p>
+        <div class="modal-actions">
+          <button class="cancel-btn" (click)="employeeToDelete = null">Anulează</button>
+          <button class="confirm-btn" (click)="deleteEmployee(employeeToDelete.id)">
+            Confirmă Ștergerea
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
-  

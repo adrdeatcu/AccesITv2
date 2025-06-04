@@ -142,6 +142,28 @@ export class SupabaseService {
       return { success: false, error: error.message || 'Failed to register user' };
     }
   }
+
+  async deleteEmployee(employeeId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch(`http://localhost:3000/admin/delete-employee/${employeeId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to delete employee');
+      }
+      
+      return { success: true };
+    } catch (error: any) {
+      console.error('❌ Failed to delete employee:', error);
+      return { success: false, error: error.message || 'Failed to delete employee' };
+    }
+  }
 }
 
 
