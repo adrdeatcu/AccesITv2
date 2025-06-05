@@ -1,4 +1,64 @@
 <div class="gate-container">
+  <!-- Out of Schedule Access Popup -->
+  <div *ngIf="lastOutOfScheduleLog" class="out-of-schedule-popup">
+    <div class="popup-content">
+      <div class="popup-header">
+        <h3>⚠️ Acces în afara programului</h3>
+        <button class="close-btn" (click)="dismissOutOfSchedulePopup()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="popup-body">
+        <div class="user-info">
+          <img *ngIf="lastOutOfScheduleLog.photo_url"
+               [src]="lastOutOfScheduleLog.photo_url"
+               alt="Fotografie angajat"
+               class="employee-photo"
+               (error)="onImageError($event)">
+          <div *ngIf="!lastOutOfScheduleLog.photo_url" class="employee-placeholder">
+            <i class="fas fa-user"></i>
+          </div>
+          
+          <div class="details">
+            <p class="name"><strong>{{ lastOutOfScheduleLog.name }}</strong></p>
+            <p><strong>Cod Bluetooth:</strong> {{ lastOutOfScheduleLog.bluetooth_code }}</p>
+            <p>
+              <strong>Direcție:</strong>
+              <span [ngClass]="{
+                'direction-label': true,
+                'entry': lastOutOfScheduleLog.direction !== 'exit',
+                'exit': lastOutOfScheduleLog.direction === 'exit'
+              }">
+                <i class="fas" [ngClass]="{
+                  'fa-sign-in-alt': lastOutOfScheduleLog.direction !== 'exit',
+                  'fa-sign-out-alt': lastOutOfScheduleLog.direction === 'exit'
+                }"></i>
+                {{ lastOutOfScheduleLog.direction === 'exit' ? 'Ieșire' : 'Intrare' }}
+              </span>
+            </p>
+            <p><strong>Program permis:</strong> {{ lastOutOfScheduleLog.allowed_schedule }}</p>
+            <p><strong>Oră solicitare:</strong> {{ lastOutOfScheduleLog.timestamp | date: 'HH:mm:ss' }}</p>
+          </div>
+        </div>
+        
+        <div class="warning-message">
+          <i class="fas fa-exclamation-triangle"></i>
+          Această persoană încearcă să acceseze clădirea în afara programului de acces alocat!
+        </div>
+      </div>
+      
+      <div class="popup-actions">
+        <button class="deny-btn" (click)="handlePopupApproval(false)">
+          <i class="fas fa-times"></i> Respinge Accesul
+        </button>
+        <button class="approve-btn" (click)="handlePopupApproval(true)">
+          <i class="fas fa-check"></i> Aprobă Accesul
+        </button>
+      </div>
+    </div>
+  </div>
+
   <header class="gate-header">
     <h1>Panou Control Poartă</h1>
     <button (click)="logout()" class="logout-btn">

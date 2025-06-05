@@ -550,4 +550,149 @@
   }
 }
 
+/* Out of Schedule Popup Styles */
+
+.out-of-schedule-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.out-of-schedule-popup .popup-content {
+  background-color: white;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.out-of-schedule-popup .popup-header {
+  background-color: #e74c3c;
+  color: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.out-of-schedule-popup .popup-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.out-of-schedule-popup .close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.out-of-schedule-popup .popup-body {
+  padding: 1.5rem;
+}
+
+.out-of-schedule-popup .user-info {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.out-of-schedule-popup .employee-photo,
+.out-of-schedule-popup .employee-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.out-of-schedule-popup .employee-placeholder {
+  background-color: #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  font-size: 2rem;
+}
+
+.out-of-schedule-popup .details {
+  flex: 1;
+}
+
+.out-of-schedule-popup .name {
+  font-size: 1.2rem;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.out-of-schedule-popup .warning-message {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.out-of-schedule-popup .popup-actions {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background-color: #f8f9fa;
+  justify-content: flex-end;
+}
+
+.out-of-schedule-popup .deny-btn,
+.out-of-schedule-popup .approve-btn {
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.out-of-schedule-popup .deny-btn {
+  background-color: #f8f9fa;
+  color: #343a40;
+  border: 1px solid #dee2e6;
+}
+
+.out-of-schedule-popup .approve-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.out-of-schedule-popup .deny-btn:hover {
+  background-color: #e9ecef;
+}
+
+.out-of-schedule-popup .approve-btn:hover {
+  background-color: #218838;
+}
+
 

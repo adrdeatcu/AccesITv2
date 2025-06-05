@@ -31,10 +31,12 @@ export class GateComponent implements OnInit, OnDestroy {
   error: string = '';
 
   lastScannedEmployee: any = null;
+  lastOutOfScheduleLog: AccessLog | null = null;
   private timeInterval?: number;
   private logsInterval?: number;
   private scanPollInterval?: number;
   private subscription?: Subscription;
+  previousPendingCount = 0;
 
   constructor(
     private supabaseService: SupabaseService,
@@ -83,26 +85,34 @@ export class GateComponent implements OnInit, OnDestroy {
     }, 2000);
   }
 
-  async loadPendingLogs() {
-    this.loading = true;
-    this.error = '';
+async handleApproval(id: number, approved: boolean) {
     try {
-      this.pendingLogs = [];
-    } catch (err) {
-      this.error = 'Nu s-au putut încărca cererile de acces.';
-      console.error('Error loading pending logs:', err);
-    } finally {
-      this.loading = false;
-    }
-  }
-
-  async handleApproval(id: number, approved: boolean) {
-    try {
-      console.log(`Handling approval for ID ${id}: ${approved}`);
-      if (approved) this.openGate();
+      const response = await fetch(`http://localhost:3000/approve-access/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approved })
+      });
+  
+      if (!response.ok) throw new Error('Approval failed');
+  
+      const result = await response.json();
+  
+      if (result.success) {
+        if (approved) {
+          // Gate opens only if approved
+          await this.openGate();
+  
+          // Show employee popup again (reused from backend scan)
+          await this.checkForScanEvent();
+        } else {
+          // 🔴 You might notify ESP or UI here about rejection (optional)
+          console.log('Access was denied. No gate action performed.');
+        }
+      }
+  
       await this.loadPendingLogs();
     } catch (error) {
-      console.error('Error handling approval:', error);
+      console.error('❌ Error handling approval:', error);
       alert('Eroare la procesarea cererii.');
     }
   }
@@ -120,7 +130,7 @@ export class GateComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
-  async checkForScanEvent() {
+ async checkForScanEvent() {
     try {
       const res = await fetch('http://localhost:3000/api/last-scan');
       const result = await res.json();
@@ -130,6 +140,62 @@ export class GateComponent implements OnInit, OnDestroy {
       }
     } catch (err) {
       console.error('❌ Error checking for scan:', err);
+    }
+  }
+
+
+  async loadPendingLogs() {
+    this.loading = true;
+    this.error = '';
+    try {
+      const response = await fetch('http://localhost:3000/admin/access-logs');
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error);
+      
+      const pendingLogs = result.logs.filter((log: any) => log.needs_approval === true);
+      
+      // Check if we have a new pending log
+      if (pendingLogs.length > this.previousPendingCount) {
+        // Get the newest log (assuming they're sorted by timestamp descending)
+        const newestLog = pendingLogs[0];
+        
+        // Store as the latest out-of-schedule request and show popup
+        this.lastOutOfScheduleLog = newestLog;
+        
+        // Play notification sound (optional)
+        this.playNotificationSound();
+      }
+      
+      this.pendingLogs = pendingLogs;
+      this.previousPendingCount = pendingLogs.length;
+    } catch (err) {
+      this.error = 'Nu s-au putut încărca cererile de acces.';
+      console.error('Error loading pending logs:', err);
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  // Add this method to dismiss the popup
+  dismissOutOfSchedulePopup() {
+    this.lastOutOfScheduleLog = null;
+  }
+
+  // Add this method to handle approval directly from the popup
+  async handlePopupApproval(approved: boolean) {
+    if (!this.lastOutOfScheduleLog) return;
+    
+    await this.handleApproval(this.lastOutOfScheduleLog.id, approved);
+    this.lastOutOfScheduleLog = null;
+  }
+
+  // Optional: Add sound notification
+  playNotificationSound() {
+    try {
+      const audio = new Audio('assets/notification.mp3');
+      audio.play();
+    } catch (error) {
+      console.error('Could not play notification sound:', error);
     }
   }
 }
