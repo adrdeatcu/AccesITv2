@@ -21,6 +21,9 @@ let latestScannedEmployee = null;
 // ✅ TEMPORARY FLAG used by ESP32 to open gate
 let temporaryFreeAccess = false;
 
+// ✅ TEMPORARY FLAG used by ESP32 to reject access
+let temporaryRejectedAccess = false;
+
 // AES256 Configuration
 const AES_KEY= process.env.AES_KEY;// Ensure this is a base64 encoded 32-byte key
 const ALGORITHM = 'aes-256-cbc';
@@ -73,52 +76,31 @@ app.get('/', (req, res) => {
 
 // ✅ Bluetooth access from mobile with AES256 encryption
 app.post('/verify-access-from-mobile', async (req, res) => {
-  console.log('📨 Received encrypted request on /verify-access-from-mobile');
-  console.log('📡 Request body:', req.body);
-
   const { encrypted_data } = req.body;
   if (!encrypted_data) {
     return res.status(400).json({
-      encrypted_response: encrypt(JSON.stringify({
-        granted: false,
-        message: 'Invalid request: missing encrypted_data'
-      }))
+      encrypted_response: encrypt(JSON.stringify({ granted: false, message: 'Missing encrypted_data' }))
     });
   }
 
   const decryptedData = decrypt(encrypted_data);
   if (!decryptedData) {
     return res.status(400).json({
-      encrypted_response: encrypt(JSON.stringify({
-        granted: false,
-        message: 'Invalid encryption or corrupted data'
-      }))
+      encrypted_response: encrypt(JSON.stringify({ granted: false, message: 'Decryption failed' }))
     });
   }
 
   let parsedData;
   try {
     parsedData = JSON.parse(decryptedData);
-  } catch (error) {
+  } catch {
     return res.status(400).json({
-      encrypted_response: encrypt(JSON.stringify({
-        granted: false,
-        message: 'Invalid JSON format'
-      }))
+      encrypted_response: encrypt(JSON.stringify({ granted: false, message: 'Invalid JSON' }))
     });
   }
 
-  const { ble_code, direction, type } = parsedData;
+  const { ble_code, direction } = parsedData;
   const validatedById = 'c302e64d-601c-4cc2-895d-09648c83bbed';
-
-  if (!ble_code) {
-    return res.status(400).json({
-      encrypted_response: encrypt(JSON.stringify({
-        granted: false,
-        message: 'Invalid request: missing ble_code'
-      }))
-    });
-  }
 
   const { data: employee, error } = await supabase
     .from('employees')
@@ -127,76 +109,124 @@ app.post('/verify-access-from-mobile', async (req, res) => {
     .single();
 
   if (error || !employee) {
-    console.log(`❌ Employee not found for ${direction}:`, ble_code);
     return res.json({
-      encrypted_response: encrypt(JSON.stringify({
-        granted: false,
-        message: 'Employee not found'
-      }))
+      encrypted_response: encrypt(JSON.stringify({ granted: false, message: 'Employee not found' }))
     });
   }
 
+  const [start, end] = employee.allowed_schedule.split('-');
   const now = new Date();
-  const accessDirection = direction === 'exit' ? 'exit' : 'entry';
+  const currentTime = now.toTimeString().slice(0, 5);
+  const needsApproval = currentTime < start || currentTime > end;
 
-  const { error: logError } = await supabase
+  // Add this logging to your access verification code (in both mobile and regular access endpoints)
+  if (needsApproval) {
+    console.log('🚨 OUT OF SCHEDULE ACCESS DETECTED:', {
+      name: employee.name,
+      allowedSchedule: employee.allowed_schedule,
+      currentTime,
+      direction
+    });
+  }
+
+  const { data: logData, error: logError } = await supabase
     .from('access_logs')
     .insert([{
       employee_id: employee.id,
       bluetooth_code: ble_code,
-      direction: accessDirection,
+      direction,
       is_visitor: false,
       timestamp: now,
-      authorized: true,
-      needs_approval: false,
+      authorized: needsApproval ? null : true,
+      needs_approval: needsApproval,
       validated_by: validatedById
-    }]);
+    }])
+    .select()
+    .single();
 
   if (logError) {
-    console.error(`❌ Failed to insert ${direction} log:`, logError);
     return res.status(500).json({
+      encrypted_response: encrypt(JSON.stringify({ granted: false, message: 'DB error' }))
+    });
+  }
+
+  if (needsApproval) {
+    return res.json({
       encrypted_response: encrypt(JSON.stringify({
         granted: false,
-        message: 'Database error'
+        message: 'pending',
+        log_id: logData.id
       }))
     });
   }
 
-  // ✅ Trigger gate and update scanned employee
   temporaryFreeAccess = true;
   latestScannedEmployee = {
     name: employee.name,
     photo_url: employee.photo_url,
-    badge_number: employee.badge_number, // ✅ You must ensure this field exists
+    badge_number: employee.badge_number,
     timestamp: now.toISOString(),
-    direction: direction
+    direction
   };
-
-  console.log(`🚀 temporaryFreeAccess set to TRUE for ESP32 on ${direction}`);
-  console.log(`✅ ${direction.toUpperCase()} granted for: ${employee.name}`);
 
   return res.json({
     encrypted_response: encrypt(JSON.stringify({
       granted: true,
       message: 'granted',
-      user: employee.name,
-      employee_name: employee.name
+      user: employee.name
     }))
   });
 });
 
-
-
-// ✅ ESP32 access polling endpoint
 app.get('/api/free-access', (req, res) => {
+  console.log('ESP32 requested access check. Current flags:', {
+    temporaryFreeAccess,
+    temporaryRejectedAccess
+  });
+  
   if (temporaryFreeAccess) {
-    temporaryFreeAccess = false; // Consume flag
-    console.log('✅ ESP32 requested free access → granted');
+    temporaryFreeAccess = false;
+    console.log('✅ ESP32 requested → granted');
     return res.json({ access: true });
+  } else if (temporaryRejectedAccess) {
+    temporaryRejectedAccess = false;
+    console.log('❌ ESP32 requested → rejected');
+    return res.json({ access: 2 });
   } else {
+    console.log('⏱️ ESP32 requested → no decision yet');
     return res.json({ access: false });
   }
 });
+
+// ✅ NEW: Check status of log by ID (used by Flutter)
+app.get('/check-access-status', async (req, res) => {
+  const logId = req.query.log_id;
+  if (!logId) {
+    return res.status(400).json({ granted: false, message: 'Missing log_id' });
+  }
+
+  const { data: log, error } = await supabase
+    .from('access_logs')
+    .select('authorized')
+    .eq('id', logId)
+    .single();
+
+  if (error || !log) {
+    return res.status(404).json({ granted: false, message: 'Log not found' });
+  }
+
+  if (log.authorized === true) {
+    temporaryFreeAccess = true;
+    return res.json({ granted: true, message: 'granted' });
+  } else if (log.authorized === false) {
+    temporaryRejectedAccess = true;
+    return res.json({ granted: false, message: 'denied' });
+  } else {
+    return res.json({ granted: false, message: 'pending' });
+  }
+});
+
+
 
 // ✅ New route: Provide last scanned employee
 app.get('/api/last-scan', (req, res) => {
@@ -257,7 +287,9 @@ app.post('/access-event', async (req, res) => {
     needsApproval,
     employee_id: employee.id
   });
-});
+})
+
+
 
 // ✅ Gatekeeper approval route
 app.patch('/approve-access/:id', async (req, res) => {
@@ -277,8 +309,15 @@ app.patch('/approve-access/:id', async (req, res) => {
     return res.status(500).json({ success: false, error: error.message });
   }
 
+  if (approved) {
+    temporaryFreeAccess = true;
+  } else {
+    temporaryRejectedAccess = true;
+  }
+
   return res.json({ success: true });
 });
+
 
 // ✅ Optional test
 app.post('/test-bluetooth-access', async (req, res) => {

@@ -152,17 +152,26 @@ async handleApproval(id: number, approved: boolean) {
       const result = await response.json();
       if (!result.success) throw new Error(result.error);
       
-      const pendingLogs = result.logs.filter((log: any) => log.needs_approval === true);
+      // Process logs and prepare them for display
+      const pendingLogs = result.logs
+        .filter((log: any) => log.needs_approval === true)
+        .map((log: any) => ({
+          id: log.id,
+          name: log.employees?.name || 'Unknown',
+          bluetooth_code: log.bluetooth_code,
+          direction: log.direction || 'in',
+          allowed_schedule: log.employees?.allowed_schedule || 'Unknown',
+          timestamp: log.timestamp,
+          photo_url: log.employees?.photo_url,
+          employee_id: log.employee_id
+        }));
       
-      // Check if we have a new pending log
-      if (pendingLogs.length > this.previousPendingCount) {
-        // Get the newest log (assuming they're sorted by timestamp descending)
-        const newestLog = pendingLogs[0];
-        
-        // Store as the latest out-of-schedule request and show popup
-        this.lastOutOfScheduleLog = newestLog;
-        
-        // Play notification sound (optional)
+      console.log('Found pending logs:', pendingLogs.length);
+      
+      // Always show popup for the first pending log if no popup is currently shown
+      if (pendingLogs.length > 0 && !this.lastOutOfScheduleLog) {
+        console.log('Setting out-of-schedule popup for:', pendingLogs[0].name);
+        this.lastOutOfScheduleLog = pendingLogs[0];
         this.playNotificationSound();
       }
       
