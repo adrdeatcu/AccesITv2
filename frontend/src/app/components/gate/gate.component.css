@@ -550,7 +550,7 @@
   }
 }
 
-/* Out of Schedule Popup Styles */
+/* Updated out-of-schedule popup styles */
 
 .out-of-schedule-popup {
   position: fixed;
@@ -562,13 +562,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
-  animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  z-index: 9999; /* Increased z-index to ensure it's on top */
+  overflow: auto; /* Allow scrolling if needed */
+  padding: 20px; /* Add padding to prevent touching screen edges */
 }
 
 .out-of-schedule-popup .popup-content {
@@ -576,14 +572,12 @@
   border-radius: 10px;
   width: 90%;
   max-width: 500px;
+  max-height: 90vh; /* Limit height to 90% of viewport */
+  overflow-y: auto; /* Add scrolling to content if needed */
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-  animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-  from { transform: translateY(50px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  display: flex;
+  flex-direction: column; /* Ensure proper layout of child elements */
+  position: relative; /* Ensure relative positioning */
 }
 
 .out-of-schedule-popup .popup-header {
@@ -593,67 +587,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.out-of-schedule-popup .popup-header h3 {
-  margin: 0;
-  font-size: 1.2rem;
-}
-
-.out-of-schedule-popup .close-btn {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 1.2rem;
-  cursor: pointer;
-}
-
-.out-of-schedule-popup .popup-body {
-  padding: 1.5rem;
-}
-
-.out-of-schedule-popup .user-info {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.out-of-schedule-popup .employee-photo,
-.out-of-schedule-popup .employee-placeholder {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.out-of-schedule-popup .employee-placeholder {
-  background-color: #e9ecef;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #6c757d;
-  font-size: 2rem;
-}
-
-.out-of-schedule-popup .details {
-  flex: 1;
-}
-
-.out-of-schedule-popup .name {
-  font-size: 1.2rem;
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-}
-
-.out-of-schedule-popup .warning-message {
-  background-color: #fff3cd;
-  color: #856404;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-top: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  position: sticky; /* Stick header to top when scrolling */
+  top: 0;
+  z-index: 2;
 }
 
 .out-of-schedule-popup .popup-actions {
@@ -662,11 +598,31 @@
   padding: 1rem 1.5rem;
   background-color: #f8f9fa;
   justify-content: flex-end;
+  position: sticky; /* Stick action buttons to bottom when scrolling */
+  bottom: 0;
+  z-index: 2;
 }
 
+/* Ensure the body takes appropriate space */
+.out-of-schedule-popup .popup-body {
+  padding: 1.5rem;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+/* Add fixed height to control overflow */
+.out-of-schedule-popup .user-info {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  max-height: 60vh; /* Prevent excessive height */
+  overflow-y: auto;
+}
+
+/* Make buttons more visible and larger */
 .out-of-schedule-popup .deny-btn,
 .out-of-schedule-popup .approve-btn {
-  padding: 0.75rem 1.25rem;
+  padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 6px;
   font-weight: 600;
@@ -674,6 +630,8 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 1rem; /* Larger font size */
+  transition: all 0.2s ease;
 }
 
 .out-of-schedule-popup .deny-btn {
